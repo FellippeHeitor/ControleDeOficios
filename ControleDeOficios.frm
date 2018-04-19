@@ -5,7 +5,7 @@
 SUB __UI_LoadForm
 
     $EXEICON:'./Chromatix-Keyboard-Keys-Hash.ico'
-    _Icon
+    _ICON
     DIM __UI_NewID AS LONG
 
     __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 384, 0, 0, 0)
@@ -29,7 +29,7 @@ SUB __UI_LoadForm
     SetCaption __UI_NewID, "Número:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoOficioLB", 150, 23, 105, 10, __UI_GetID("Frame1"))
+    __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoOficioLB", 116, 23, 105, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "UltimoOficio"
     Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
     Control(__UI_NewID).HasBorder = True
@@ -49,7 +49,7 @@ SUB __UI_LoadForm
     SetCaption __UI_NewID, "Usuário:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoUsuarioLB", 150, 23, 105, 35, __UI_GetID("Frame1"))
+    __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoUsuarioLB", 116, 23, 105, 35, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "UltimoUsuario"
     Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
     Control(__UI_NewID).HasBorder = True
@@ -86,23 +86,27 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Align = __UI_Center
     Control(__UI_NewID).VAlign = __UI_Middle
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Button, "FirstBT", 23, 23, 261, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, "|<"
+    __UI_NewID = __UI_NewControl(__UI_Type_Button, "FirstBT", 28, 23, 228, 10, __UI_GetID("Frame1"))
+    SetCaption __UI_NewID, CHR$(17) + CHR$(17)
+    Control(__UI_NewID).Font = SetFont("", 8, "")
     Control(__UI_NewID).CanHaveFocus = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Button, "PreviousBT", 23, 23, 286, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, "<"
+    __UI_NewID = __UI_NewControl(__UI_Type_Button, "PreviousBT", 28, 23, 262, 10, __UI_GetID("Frame1"))
+    Control(__UI_NewID).Font = SetFont("", 8, "")
+    SetCaption __UI_NewID, CHR$(17)
     Control(__UI_NewID).CanHaveFocus = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Button, "NextBT", 23, 23, 311, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, ">"
+    __UI_NewID = __UI_NewControl(__UI_Type_Button, "NextBT", 28, 23, 296, 10, __UI_GetID("Frame1"))
+    Control(__UI_NewID).Font = SetFont("", 8, "")
+    SetCaption __UI_NewID, CHR$(16)
     Control(__UI_NewID).CanHaveFocus = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Button, "LastBT", 23, 23, 336, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, ">|"
+    __UI_NewID = __UI_NewControl(__UI_Type_Button, "LastBT", 28, 23, 330, 10, __UI_GetID("Frame1"))
+    Control(__UI_NewID).Font = SetFont("", 8, "")
+    SetCaption __UI_NewID, CHR$(16) + CHR$(16)
     Control(__UI_NewID).CanHaveFocus = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Button, "VerHistoricoBT", 98, 23, 261, 34, __UI_GetID("Frame1"))
+    __UI_NewID = __UI_NewControl(__UI_Type_Button, "VerHistoricoBT", 131, 23, 228, 34, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "Ver Histórico"
     Control(__UI_NewID).CanHaveFocus = True
 

@@ -60,15 +60,15 @@ END SUB
 SUB __UI_OnLoad
     IniSetForceReload True
     a$ = ReadSetting("oficios.ini", "controle", "UltimoNumero")
-    IF Len(a$) > 0 THEN
-        Ultimo = Val(a$)
+    IF LEN(a$) > 0 THEN
+        Ultimo = VAL(a$)
         Atual = Ultimo
         Caption(UltimoOficioLB) = a$
         Proximo = Ultimo + 1
-        Caption(BT) = Ltrim$(Str$(Proximo))
+        Caption(BT) = LTRIM$(STR$(Proximo))
         Caption(UltimaDescricaoLB) = ReadSetting("", a$, "Descricao")
         Caption(UltimoUsuarioLB) = ReadSetting("", a$, "Usuario")
-        Primeiro = Val(ReadSetting("", "controle", "PrimeiroNumero"))
+        Primeiro = VAL(ReadSetting("", "controle", "PrimeiroNumero"))
     ELSE
         Caption(UltimoOficioLB) = "-"
         Caption(UltimaDescricaoLB) = "-"
@@ -77,46 +77,46 @@ SUB __UI_OnLoad
         Proximo = 1
     END IF
 
-    IF Len(Usuario) = 0 THEN Usuario = "Secretaria Criminal"
+    IF LEN(Usuario) = 0 THEN Usuario = "Secretaria Criminal"
     Caption(UsuarioAtualLB) = Usuario
     ToolTip(UltimaDescricaoLB) = "Clique para copiar"
     __UI_Focus = DescricaoTB
-    LastCheck = Timer
+    LastCheck = TIMER
     Control(NextBT).Disabled = True
     Control(LastBT).Disabled = True
     DoLocalBackup
 END SUB
 
 SUB DoLocalBackup
-    ff = Freefile
-    Open "oficios.ini" FOR BINARY AS #ff
-    a$ = Space$(Lof(ff))
-    Get #ff, 1, a$
+    ff = FREEFILE
+    OPEN "oficios.ini" FOR BINARY AS #ff
+    a$ = SPACE$(LOF(ff))
+    GET #ff, 1, a$
     CLOSE #ff
 
-    Open Environ$("USERPROFILE") + "\oficiosBackup.ini" FOR OUTPUT AS #ff: CLOSE #ff
-    Open Environ$("USERPROFILE") + "\oficiosBackup.ini" FOR BINARY AS #ff
-    Put #ff, 1, a$
+    OPEN ENVIRON$("USERPROFILE") + "\oficiosBackup.ini" FOR OUTPUT AS #ff: CLOSE #ff
+    OPEN ENVIRON$("USERPROFILE") + "\oficiosBackup.ini" FOR BINARY AS #ff
+    PUT #ff, 1, a$
     CLOSE #ff
 END SUB
 
 SUB __UI_BeforeUpdateDisplay
-    IF Timer - LastCheck > 1 THEN
+    IF TIMER - LastCheck > 1 THEN
         Refresh
     END IF
 END SUB
 
 SUB Refresh
     a$ = ReadSetting("", "controle", "UltimoNumero")
-    IF Val(a$) <> Ultimo THEN
-        Ultimo = Val(a$)
+    IF VAL(a$) <> Ultimo THEN
+        Ultimo = VAL(a$)
         Caption(UltimoOficioLB) = a$
         Proximo = Ultimo + 1
-        Caption(BT) = Ltrim$(Str$(Proximo))
+        Caption(BT) = LTRIM$(STR$(Proximo))
         Caption(UltimaDescricaoLB) = ReadSetting("", a$, "Descricao")
         Caption(UltimoUsuarioLB) = ReadSetting("", a$, "Usuario")
     END IF
-    LastCheck = Timer
+    LastCheck = TIMER
 END SUB
 
 SUB __UI_BeforeUnload
@@ -132,21 +132,21 @@ SUB __UI_Click (id AS LONG)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             IF Answer = MsgBox_Yes THEN
-                a$ = Ltrim$(Str$(Proximo))
-                _Clipboard$ = a$
+                a$ = LTRIM$(STR$(Proximo))
+                _CLIPBOARD$ = a$
                 WriteSetting "", a$, "Usuario", Usuario
-                IF Len(Text(DescricaoTB)) THEN WriteSetting "", a$, "Descricao", Text(DescricaoTB)
+                IF LEN(Text(DescricaoTB)) THEN WriteSetting "", a$, "Descricao", Text(DescricaoTB)
                 WriteSetting "", "controle", "UltimoNumero", a$
 
                 Ultimo = Proximo
                 Atual = Ultimo
                 Control(NextBT).Disabled = True
                 Control(LastBT).Disabled = True
-                Proximo = Val(a$) + 1
-                Caption(BT) = Ltrim$(Str$(Proximo))
+                Proximo = VAL(a$) + 1
+                Caption(BT) = LTRIM$(STR$(Proximo))
                 Caption(UltimoOficioLB) = a$
-                Proximo = Val(a$) + 1
-                Caption(BT) = Ltrim$(Str$(Proximo))
+                Proximo = VAL(a$) + 1
+                Caption(BT) = LTRIM$(STR$(Proximo))
                 Caption(UltimaDescricaoLB) = Text(DescricaoTB)
                 Caption(UltimoUsuarioLB) = Usuario
                 Text(DescricaoTB) = ""
@@ -154,11 +154,11 @@ SUB __UI_Click (id AS LONG)
                 DoLocalBackup
             END IF
         CASE VerHistoricoBT
-            Shell _HIDE _DONTWAIT "start oficios.ini"
+            SHELL _HIDE _DONTWAIT "start oficios.ini"
         CASE UltimaDescricaoLB
-            IF Len(Caption(UltimaDescricaoLB)) THEN
+            IF LEN(Caption(UltimaDescricaoLB)) THEN
                 Text(DescricaoTB) = Caption(UltimaDescricaoLB)
-                Control(DescricaoTB).Cursor = Len(Text(DescricaoTB))
+                Control(DescricaoTB).Cursor = LEN(Text(DescricaoTB))
                 __UI_Focus = DescricaoTB
             END IF
         CASE FirstBT
@@ -170,9 +170,9 @@ SUB __UI_Click (id AS LONG)
         CASE LastBT
             Atual = Ultimo
         CASE FirstBT, PreviousBT, NextBT, LastBT
-            Caption(UltimoOficioLB) = Ltrim$(Str$(Atual))
-            Caption(UltimaDescricaoLB) = ReadSetting("", Str$(Atual), "Descricao")
-            Caption(UltimoUsuarioLB) = ReadSetting("", Str$(Atual), "Usuario")
+            Caption(UltimoOficioLB) = LTRIM$(STR$(Atual))
+            Caption(UltimaDescricaoLB) = ReadSetting("", STR$(Atual), "Descricao")
+            Caption(UltimoUsuarioLB) = ReadSetting("", STR$(Atual), "Usuario")
     END SELECT
     IF Atual = Ultimo THEN
         Control(NextBT).Disabled = True
