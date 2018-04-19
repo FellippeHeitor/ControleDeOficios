@@ -37,8 +37,11 @@ DIM SHARED DecriaoOpcionalLB AS LONG
 DIM SHARED DescricaoTB AS LONG
 DIM SHARED BT AS LONG
 DIM SHARED VerHistoricoBT AS LONG
+DIM SHARED FirstBT AS LONG, PreviousBT AS LONG
+DIM SHARED NextBT AS LONG, LastBT AS LONG
 
 DIM SHARED Ultimo AS LONG, Proximo AS LONG
+DIM SHARED Primeiro AS LONG, Atual AS LONG
 DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
 
@@ -59,11 +62,13 @@ SUB __UI_OnLoad
     a$ = ReadSetting("oficios.ini", "controle", "UltimoNumero")
     IF Len(a$) > 0 THEN
         Ultimo = Val(a$)
+        Atual = Ultimo
         Caption(UltimoOficioLB) = a$
         Proximo = Ultimo + 1
         Caption(BT) = Ltrim$(Str$(Proximo))
         Caption(UltimaDescricaoLB) = ReadSetting("", a$, "Descricao")
         Caption(UltimoUsuarioLB) = ReadSetting("", a$, "Usuario")
+        Primeiro = Val(ReadSetting("", "controle", "PrimeiroNumero"))
     ELSE
         Caption(UltimoOficioLB) = "-"
         Caption(UltimaDescricaoLB) = "-"
@@ -74,8 +79,11 @@ SUB __UI_OnLoad
 
     IF Len(Usuario) = 0 THEN Usuario = "Secretaria Criminal"
     Caption(UsuarioAtualLB) = Usuario
+    ToolTip(UltimaDescricaoLB) = "Clique para copiar"
     __UI_Focus = DescricaoTB
     LastCheck = Timer
+    Control(NextBT).Disabled = True
+    Control(LastBT).Disabled = True
     DoLocalBackup
 END SUB
 
@@ -116,7 +124,11 @@ SUB __UI_BeforeUnload
 END SUB
 
 SUB __UI_Click (id AS LONG)
-    SELECT CASE id
+    Control(FirstBT).Disabled = False
+    Control(PreviousBT).Disabled = False
+    Control(NextBT).Disabled = False
+    Control(LastBT).Disabled = False
+    SELECT EVERYCASE id
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             IF Answer = MsgBox_Yes THEN
@@ -127,6 +139,9 @@ SUB __UI_Click (id AS LONG)
                 WriteSetting "", "controle", "UltimoNumero", a$
 
                 Ultimo = Proximo
+                Atual = Ultimo
+                Control(NextBT).Disabled = True
+                Control(LastBT).Disabled = True
                 Proximo = Val(a$) + 1
                 Caption(BT) = Ltrim$(Str$(Proximo))
                 Caption(UltimoOficioLB) = a$
@@ -140,7 +155,33 @@ SUB __UI_Click (id AS LONG)
             END IF
         CASE VerHistoricoBT
             Shell _HIDE _DONTWAIT "start oficios.ini"
+        CASE UltimaDescricaoLB
+            IF Len(Caption(UltimaDescricaoLB)) THEN
+                Text(DescricaoTB) = Caption(UltimaDescricaoLB)
+                Control(DescricaoTB).Cursor = Len(Text(DescricaoTB))
+                __UI_Focus = DescricaoTB
+            END IF
+        CASE FirstBT
+            Atual = Primeiro
+        CASE PreviousBT
+            Atual = Atual + (Atual - 1 >= Primeiro)
+        CASE NextBT
+            Atual = Atual - (Atual + 1 <= Ultimo)
+        CASE LastBT
+            Atual = Ultimo
+        CASE FirstBT, PreviousBT, NextBT, LastBT
+            Caption(UltimoOficioLB) = Ltrim$(Str$(Atual))
+            Caption(UltimaDescricaoLB) = ReadSetting("", Str$(Atual), "Descricao")
+            Caption(UltimoUsuarioLB) = ReadSetting("", Str$(Atual), "Usuario")
     END SELECT
+    IF Atual = Ultimo THEN
+        Control(NextBT).Disabled = True
+        Control(LastBT).Disabled = True
+    END IF
+    IF Atual = Primeiro THEN
+        Control(FirstBT).Disabled = True
+        Control(PreviousBT).Disabled = True
+    END IF
 END SUB
 
 SUB __UI_MouseEnter (id AS LONG)
