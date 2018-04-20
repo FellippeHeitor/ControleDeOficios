@@ -117,10 +117,6 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Font = SetFont("", 8, "")
     Control(__UI_NewID).CanHaveFocus = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Button, "VerHistoricoBT", 131, 23, 228, 34, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, "Ver Histórico"
-    Control(__UI_NewID).CanHaveFocus = True
-
     __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem3", 66, 18, 0, 4, __UI_GetID("MenuBar1"))
     SetCaption __UI_NewID, "&Visualizar histórico completo...-"
 
@@ -163,7 +159,6 @@ SUB __UI_AssignIDs
     PreviousBT = __UI_GetID("PreviousBT")
     NextBT = __UI_GetID("NextBT")
     LastBT = __UI_GetID("LastBT")
-    VerHistoricoBT = __UI_GetID("VerHistoricoBT")
     MenuItem3 = __UI_GetID("MenuItem3")
     MenuItem1 = __UI_GetID("MenuItem1")
     MenuItem2 = __UI_GetID("MenuItem2")

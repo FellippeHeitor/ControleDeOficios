@@ -36,7 +36,6 @@ DIM SHARED UsuarioAtualLB AS LONG
 DIM SHARED DecriaoOpcionalLB AS LONG
 DIM SHARED DescricaoTB AS LONG
 DIM SHARED BT AS LONG
-DIM SHARED VerHistoricoBT AS LONG
 DIM SHARED FirstBT AS LONG, PreviousBT AS LONG
 DIM SHARED NextBT AS LONG, LastBT AS LONG
 DIM SHARED MenuBar1 AS LONG
@@ -82,27 +81,22 @@ SUB __UI_OnLoad
         Atual = Ultimo
         Caption(UltimoOficioLB) = a$
         Proximo = Ultimo + 1
-        Caption(BT) = LTRIM$(STR$(Proximo))
-        Caption(UltimaDescricaoLB) = ReadSetting("", a$, "Descricao")
-        Caption(UltimoUsuarioLB) = ReadSetting("", a$, "Usuario")
+        Refresh
     ELSE
+        WriteSetting file$, "controle", "UltimoNumero", "0"
         Caption(UltimoOficioLB) = "-"
         Caption(UltimaDescricaoLB) = "-"
         Caption(UltimoUsuarioLB) = "-"
-        Caption(BT) = "1"
         Proximo = 1
     END IF
 
-    SetCaption Label10, GenericUser
-    Caption(__UI_FormID) = "Controle de Oficios - " + GenericUser
+    Caption(ControleDeOficios) = "Controle de Oficios - " + GenericUser
+    Caption(BT) = LTRIM$(STR$(Proximo))
+    Caption(Label10) = GenericUser
     Caption(UsuarioAtualLB) = Usuario
-    ToolTip(UltimaDescricaoLB) = "Clique para copiar"
     __UI_Focus = DescricaoTB
-    LastCheck = TIMER
-    Control(NextBT).Disabled = True
-    Control(LastBT).Disabled = True
-    Control(VerHistoricoBT).Hidden = True
     DoLocalBackup
+    LastCheck = TIMER
 END SUB
 
 SUB DoLocalBackup
@@ -142,13 +136,29 @@ END SUB
 SUB Refresh
     a$ = ReadSetting("", "controle", "UltimoNumero")
     IF VAL(a$) <> Ultimo THEN
-        Ultimo = VAL(a$)
-        Caption(UltimoOficioLB) = a$
+        IF Atual = Ultimo THEN
+            Atual = VAL(a$)
+            Ultimo = Atual
+        ELSE
+            Ultimo = VAL(a$)
+        END IF
         Proximo = Ultimo + 1
         Caption(BT) = LTRIM$(STR$(Proximo))
-        Caption(UltimaDescricaoLB) = ReadSetting("", a$, "Descricao")
-        Caption(UltimoUsuarioLB) = ReadSetting("", a$, "Usuario")
     END IF
+
+    Caption(UltimoOficioLB) = STR$(Atual)
+    a$ = ReadSetting("", STR$(Atual), "Descricao")
+    b$ = ReadSetting("", STR$(Atual), "Data")
+    IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
+        a$ = a$ + ", " + b$
+    ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
+        a$ = "Expedido em " + b$
+    ELSEIF LEN(a$) = 0 AND LEN(b$) = 0 THEN
+        a$ = "-"
+    END IF
+    Caption(UltimaDescricaoLB) = a$
+    Caption(UltimoUsuarioLB) = ReadSetting("", STR$(Atual), "Usuario")
+
     LastCheck = TIMER
 END SUB
 
@@ -167,21 +177,13 @@ SUB __UI_Click (id AS LONG)
             IF Answer = MsgBox_Yes THEN
                 a$ = LTRIM$(STR$(Proximo))
                 _CLIPBOARD$ = a$
+                WriteSetting "", a$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
                 WriteSetting "", a$, "Usuario", Usuario
                 IF LEN(Text(DescricaoTB)) THEN WriteSetting "", a$, "Descricao", Text(DescricaoTB)
                 WriteSetting "", "controle", "UltimoNumero", a$
 
-                Ultimo = Proximo
                 Atual = Ultimo
-                Control(NextBT).Disabled = True
-                Control(LastBT).Disabled = True
-                Proximo = VAL(a$) + 1
-                Caption(BT) = LTRIM$(STR$(Proximo))
-                Caption(UltimoOficioLB) = a$
-                Proximo = VAL(a$) + 1
-                Caption(BT) = LTRIM$(STR$(Proximo))
-                Caption(UltimaDescricaoLB) = Text(DescricaoTB)
-                Caption(UltimoUsuarioLB) = Usuario
+                Refresh
                 Text(DescricaoTB) = ""
                 __UI_Focus = DescricaoTB
                 DoLocalBackup
@@ -189,8 +191,9 @@ SUB __UI_Click (id AS LONG)
         CASE VerHistoricoBT, MenuItem3
             SHELL _HIDE _DONTWAIT "start " + file$
         CASE UltimaDescricaoLB
-            IF LEN(Caption(UltimaDescricaoLB)) THEN
-                Text(DescricaoTB) = Caption(UltimaDescricaoLB)
+            a$ = ReadSetting("", STR$(Atual), "Descricao")
+            IF LEN(a$) THEN
+                Text(DescricaoTB) = a$
                 Control(DescricaoTB).Cursor = LEN(Text(DescricaoTB))
                 __UI_Focus = DescricaoTB
             END IF
@@ -203,13 +206,7 @@ SUB __UI_Click (id AS LONG)
         CASE LastBT
             Atual = Ultimo
         CASE FirstBT, PreviousBT, NextBT, LastBT
-            Caption(UltimoOficioLB) = LTRIM$(STR$(Atual))
-            a$ = ReadSetting("", STR$(Atual), "Descricao")
-            IF a$ = "" THEN a$ = "-"
-            Caption(UltimaDescricaoLB) = a$
-            a$ = ReadSetting("", STR$(Atual), "Usuario")
-            IF a$ = "" THEN a$ = GenericUser
-            Caption(UltimoUsuarioLB) = a$
+            Refresh
     END SELECT
 END SUB
 
@@ -228,7 +225,12 @@ SUB __UI_MouseEnter (id AS LONG)
         CASE Label2
 
         CASE UltimaDescricaoLB
-
+            a$ = ReadSetting("", STR$(Atual), "Descricao")
+            IF LEN(a$) THEN
+                ToolTip(UltimaDescricaoLB) = "Clique para copiar"
+            ELSE
+                ToolTip(UltimaDescricaoLB) = ""
+            END IF
         CASE Label3
 
         CASE UltimoUsuarioLB
