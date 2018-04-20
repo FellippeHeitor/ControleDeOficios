@@ -8,22 +8,29 @@ SUB __UI_LoadForm
     _ICON
     DIM __UI_NewID AS LONG
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 384, 0, 0, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 416, 0, 0, 0)
     SetCaption __UI_NewID, "Controle de Ofícios"
     Text(__UI_NewID) = "Chromatix-Keyboard-Keys-Hash.ico"
     Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 12, "")
     Control(__UI_NewID).CenteredWindow = True
     Control(__UI_NewID).Encoding = 1252
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Frame, "Frame1", 372, 129, 14, 74, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_Frame, "Frame1", 372, 129, 14, 103, 0)
     SetCaption __UI_NewID, "Ofícios anteriores"
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).Value = 11
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Frame, "PrximoNmero", 372, 160, 14, 218, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_Frame, "PrximoNmero", 372, 160, 14, 248, 0)
     SetCaption __UI_NewID, "Próximo número:"
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).Value = 5
+
+    __UI_NewID = __UI_NewControl(__UI_Type_MenuBar, "MenuBar1", 56, 20, 8, 0, 0)
+    SetCaption __UI_NewID, "&Arquivo"
+
+    __UI_NewID = __UI_NewControl(__UI_Type_MenuBar, "MenuBar2", 47, 20, 344, 0, 0)
+    SetCaption __UI_NewID, "Aj&uda"
+    Control(__UI_NewID).Align = __UI_Right
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "NmeroLB", 93, 23, 10, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "Número:"
@@ -49,7 +56,7 @@ SUB __UI_LoadForm
     SetCaption __UI_NewID, "Usuário:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoUsuarioLB", 116, 23, 105, 35, __UI_GetID("Frame1"))
+    __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoUsuarioLB", 254, 23, 105, 35, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "UltimoUsuario"
     Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
     Control(__UI_NewID).HasBorder = True
@@ -79,7 +86,11 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Font = SetFont("arialbd.ttf", 72, "")
     Control(__UI_NewID).CanHaveFocus = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_PictureBox, "TJMGpngPX", 400, 64, 0, 0, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_PictureBox, "PictureBox2", 400, 64, 0, 23, 0)
+    Control(__UI_NewID).Stretch = False
+    Control(__UI_NewID).BackColor = _RGB32(255, 255, 255)
+
+    __UI_NewID = __UI_NewControl(__UI_Type_PictureBox, "TJMGpngPX", 210, 64, 0, 23, 0)
     LoadImage Control(__UI_NewID), "TJMG.png"
     Control(__UI_NewID).Stretch = False
     Control(__UI_NewID).BackColor = _RGB32(255, 255, 255)
@@ -92,23 +103,40 @@ SUB __UI_LoadForm
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "PreviousBT", 28, 23, 262, 10, __UI_GetID("Frame1"))
-    Control(__UI_NewID).Font = SetFont("", 8, "")
     SetCaption __UI_NewID, CHR$(17)
+    Control(__UI_NewID).Font = SetFont("", 8, "")
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "NextBT", 28, 23, 296, 10, __UI_GetID("Frame1"))
-    Control(__UI_NewID).Font = SetFont("", 8, "")
     SetCaption __UI_NewID, CHR$(16)
+    Control(__UI_NewID).Font = SetFont("", 8, "")
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "LastBT", 28, 23, 330, 10, __UI_GetID("Frame1"))
-    Control(__UI_NewID).Font = SetFont("", 8, "")
     SetCaption __UI_NewID, CHR$(16) + CHR$(16)
+    Control(__UI_NewID).Font = SetFont("", 8, "")
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "VerHistoricoBT", 131, 23, 228, 34, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "Ver Histórico"
     Control(__UI_NewID).CanHaveFocus = True
+
+    __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem3", 66, 18, 0, 4, __UI_GetID("MenuBar1"))
+    SetCaption __UI_NewID, "&Visualizar histórico completo...-"
+
+    __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem1", 66, 18, 0, 4, __UI_GetID("MenuBar1"))
+    SetCaption __UI_NewID, "&Sair"
+
+    __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem2", 86, 18, 0, 4, __UI_GetID("MenuBar2"))
+    SetCaption __UI_NewID, "&Sobre..."
+
+    __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label10", 185, 64, 215, 23, 0)
+    SetCaption __UI_NewID, "Secretaria Criminal"
+    Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 18, "")
+    Control(__UI_NewID).BackStyle = __UI_Transparent
+    Control(__UI_NewID).Align = __UI_Center
+    Control(__UI_NewID).VAlign = __UI_Middle
+    Control(__UI_NewID).WordWrap = True
 
 END SUB
 
@@ -116,6 +144,8 @@ SUB __UI_AssignIDs
     ControleDeOficios = __UI_GetID("ControleDeOficios")
     Frame1 = __UI_GetID("Frame1")
     PrximoNmero = __UI_GetID("PrximoNmero")
+    MenuBar1 = __UI_GetID("MenuBar1")
+    MenuBar2 = __UI_GetID("MenuBar2")
     NmeroLB = __UI_GetID("NmeroLB")
     UltimoOficioLB = __UI_GetID("UltimoOficioLB")
     Label2 = __UI_GetID("Label2")
@@ -127,10 +157,15 @@ SUB __UI_AssignIDs
     DecriaoOpcionalLB = __UI_GetID("DecriaoOpcionalLB")
     DescricaoTB = __UI_GetID("DescricaoTB")
     BT = __UI_GetID("BT")
+    PictureBox2 = __UI_GetID("PictureBox2")
     TJMGpngPX = __UI_GetID("TJMGpngPX")
     FirstBT = __UI_GetID("FirstBT")
     PreviousBT = __UI_GetID("PreviousBT")
     NextBT = __UI_GetID("NextBT")
     LastBT = __UI_GetID("LastBT")
     VerHistoricoBT = __UI_GetID("VerHistoricoBT")
+    MenuItem3 = __UI_GetID("MenuItem3")
+    MenuItem1 = __UI_GetID("MenuItem1")
+    MenuItem2 = __UI_GetID("MenuItem2")
+    Label10 = __UI_GetID("Label10")
 END SUB

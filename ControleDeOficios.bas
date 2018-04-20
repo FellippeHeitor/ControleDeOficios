@@ -39,13 +39,29 @@ DIM SHARED BT AS LONG
 DIM SHARED VerHistoricoBT AS LONG
 DIM SHARED FirstBT AS LONG, PreviousBT AS LONG
 DIM SHARED NextBT AS LONG, LastBT AS LONG
+DIM SHARED MenuBar1 AS LONG
+DIM SHARED MenuItem1 AS LONG
+DIM SHARED MenuBar2 AS LONG
+DIM SHARED MenuItem2 AS LONG
+DIM SHARED MenuItem3 AS LONG
+DIM SHARED Label10 AS LONG
 
 DIM SHARED Ultimo AS LONG, Proximo AS LONG
-DIM SHARED Primeiro AS LONG, Atual AS LONG
+DIM SHARED Atual AS LONG
 DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
+DIM SHARED file$, GenericUser AS STRING
 
-IF LEN(COMMAND$) THEN Usuario = COMMAND$
+IF LTRIM$(COMMAND$(2)) = "-civel" THEN
+    file$ = "oficios-civel.ini"
+    Usuario = COMMAND$(1)
+    GenericUser = "Secretaria Cível"
+ELSE
+    file$ = "oficios.ini"
+    Usuario = "Secretaria Criminal"
+    GenericUser = Usuario
+    IF LEN(COMMAND$(1)) THEN Usuario = COMMAND$(1)
+END IF
 
 ': External modules: ---------------------------------------------------------------
 '$INCLUDE:'InForm\InForm.ui'
@@ -60,7 +76,7 @@ END SUB
 
 SUB __UI_OnLoad
     IniSetForceReload True
-    a$ = ReadSetting("oficios.ini", "controle", "UltimoNumero")
+    a$ = ReadSetting(file$, "controle", "UltimoNumero")
     IF LEN(a$) > 0 THEN
         Ultimo = VAL(a$)
         Atual = Ultimo
@@ -69,7 +85,6 @@ SUB __UI_OnLoad
         Caption(BT) = LTRIM$(STR$(Proximo))
         Caption(UltimaDescricaoLB) = ReadSetting("", a$, "Descricao")
         Caption(UltimoUsuarioLB) = ReadSetting("", a$, "Usuario")
-        Primeiro = VAL(ReadSetting("", "controle", "PrimeiroNumero"))
     ELSE
         Caption(UltimoOficioLB) = "-"
         Caption(UltimaDescricaoLB) = "-"
@@ -78,19 +93,21 @@ SUB __UI_OnLoad
         Proximo = 1
     END IF
 
-    IF LEN(Usuario) = 0 THEN Usuario = "Secretaria Criminal"
+    SetCaption Label10, GenericUser
+    Caption(__UI_FormID) = "Controle de Oficios - " + GenericUser
     Caption(UsuarioAtualLB) = Usuario
     ToolTip(UltimaDescricaoLB) = "Clique para copiar"
     __UI_Focus = DescricaoTB
     LastCheck = TIMER
     Control(NextBT).Disabled = True
     Control(LastBT).Disabled = True
+    Control(VerHistoricoBT).Hidden = True
     DoLocalBackup
 END SUB
 
 SUB DoLocalBackup
     ff = FREEFILE
-    OPEN "oficios.ini" FOR BINARY AS #ff
+    OPEN file$ FOR BINARY AS #ff
     a$ = SPACE$(LOF(ff))
     GET #ff, 1, a$
     CLOSE #ff
@@ -102,8 +119,23 @@ SUB DoLocalBackup
 END SUB
 
 SUB __UI_BeforeUpdateDisplay
+    Control(FirstBT).Disabled = False
+    Control(PreviousBT).Disabled = False
+    Control(NextBT).Disabled = False
+    Control(LastBT).Disabled = False
+
     IF TIMER - LastCheck > 1 THEN
         Refresh
+    END IF
+
+    IF Atual = Ultimo THEN
+        Control(NextBT).Disabled = True
+        Control(LastBT).Disabled = True
+    END IF
+
+    IF Atual = 1 THEN
+        Control(FirstBT).Disabled = True
+        Control(PreviousBT).Disabled = True
     END IF
 END SUB
 
@@ -125,11 +157,11 @@ SUB __UI_BeforeUnload
 END SUB
 
 SUB __UI_Click (id AS LONG)
-    Control(FirstBT).Disabled = False
-    Control(PreviousBT).Disabled = False
-    Control(NextBT).Disabled = False
-    Control(LastBT).Disabled = False
     SELECT EVERYCASE id
+        CASE MenuItem1
+            SYSTEM
+        CASE MenuItem2
+            Answer = MessageBox("Controle de Ofícios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             IF Answer = MsgBox_Yes THEN
@@ -154,8 +186,8 @@ SUB __UI_Click (id AS LONG)
                 __UI_Focus = DescricaoTB
                 DoLocalBackup
             END IF
-        CASE VerHistoricoBT
-            SHELL _HIDE _DONTWAIT "start oficios.ini"
+        CASE VerHistoricoBT, MenuItem3
+            SHELL _HIDE _DONTWAIT "start " + file$
         CASE UltimaDescricaoLB
             IF LEN(Caption(UltimaDescricaoLB)) THEN
                 Text(DescricaoTB) = Caption(UltimaDescricaoLB)
@@ -163,26 +195,22 @@ SUB __UI_Click (id AS LONG)
                 __UI_Focus = DescricaoTB
             END IF
         CASE FirstBT
-            Atual = Primeiro
+            Atual = 1
         CASE PreviousBT
-            Atual = Atual + (Atual - 1 >= Primeiro)
+            Atual = Atual + (Atual - 1 >= 1)
         CASE NextBT
             Atual = Atual - (Atual + 1 <= Ultimo)
         CASE LastBT
             Atual = Ultimo
         CASE FirstBT, PreviousBT, NextBT, LastBT
             Caption(UltimoOficioLB) = LTRIM$(STR$(Atual))
-            Caption(UltimaDescricaoLB) = ReadSetting("", STR$(Atual), "Descricao")
-            Caption(UltimoUsuarioLB) = ReadSetting("", STR$(Atual), "Usuario")
+            a$ = ReadSetting("", STR$(Atual), "Descricao")
+            IF a$ = "" THEN a$ = "-"
+            Caption(UltimaDescricaoLB) = a$
+            a$ = ReadSetting("", STR$(Atual), "Usuario")
+            IF a$ = "" THEN a$ = GenericUser
+            Caption(UltimoUsuarioLB) = a$
     END SELECT
-    IF Atual = Ultimo THEN
-        Control(NextBT).Disabled = True
-        Control(LastBT).Disabled = True
-    END IF
-    IF Atual = Primeiro THEN
-        Control(FirstBT).Disabled = True
-        Control(PreviousBT).Disabled = True
-    END IF
 END SUB
 
 SUB __UI_MouseEnter (id AS LONG)
