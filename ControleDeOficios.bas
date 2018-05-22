@@ -44,6 +44,7 @@ DIM SHARED MenuBar2 AS LONG
 DIM SHARED MenuItem2 AS LONG
 DIM SHARED MenuItem3 AS LONG
 DIM SHARED Label10 AS LONG
+DIM SHARED UltimoOficioTB AS LONG
 
 DIM SHARED Ultimo AS LONG, Proximo AS LONG
 DIM SHARED Atual AS LONG
@@ -131,6 +132,7 @@ SUB __UI_BeforeUpdateDisplay
         Control(FirstBT).Disabled = True
         Control(PreviousBT).Disabled = True
     END IF
+
 END SUB
 
 SUB Refresh
@@ -146,11 +148,12 @@ SUB Refresh
         Caption(BT) = LTRIM$(STR$(Proximo))
     END IF
 
+    Control(UltimoOficioTB).Max = Ultimo
     Caption(UltimoOficioLB) = STR$(Atual)
     a$ = ReadSetting("", STR$(Atual), "Descricao")
     b$ = ReadSetting("", STR$(Atual), "Data")
     IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
-        a$ = a$ + ", " + b$
+        a$ = b$ + ": " + a$
     ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
         a$ = "Expedido em " + b$
     ELSEIF LEN(a$) = 0 AND LEN(b$) = 0 THEN
@@ -207,6 +210,11 @@ SUB __UI_Click (id AS LONG)
             Atual = Ultimo
         CASE FirstBT, PreviousBT, NextBT, LastBT
             Refresh
+            Control(UltimoOficioTB).Hidden = True
+        CASE UltimoOficioLB
+            Control(UltimoOficioTB).Hidden = False
+            Text(UltimoOficioTB) = LTRIM$(STR$(Atual))
+            SetFocus UltimoOficioTB
     END SELECT
 END SUB
 
@@ -296,6 +304,9 @@ SUB __UI_FocusOut (id AS LONG)
 
         CASE BT
 
+        CASE UltimoOficioTB
+            Control(UltimoOficioTB).Hidden = True
+            Control(UltimoOficioLB).Redraw = True
     END SELECT
 END SUB
 
@@ -371,6 +382,16 @@ SUB __UI_KeyPress (id AS LONG)
 
         CASE BT
 
+        CASE UltimoOficioTB
+            IF __UI_KeyHit = 13 THEN
+                Atual = VAL(Text(UltimoOficioTB))
+                Control(UltimoOficioTB).Hidden = True
+                Refresh
+                __UI_ForceRedraw = True
+            ELSEIF __UI_KeyHit = 27 THEN
+                Control(UltimoOficioTB).Hidden = True
+                __UI_ForceRedraw = True
+            END IF
     END SELECT
 END SUB
 

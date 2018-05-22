@@ -11,7 +11,7 @@ SUB __UI_LoadForm
     __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 416, 0, 0, 0)
     SetCaption __UI_NewID, "Controle de Ofícios"
     Text(__UI_NewID) = "Chromatix-Keyboard-Keys-Hash.ico"
-    Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 12, "")
+    Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 12)
     Control(__UI_NewID).CenteredWindow = True
     Control(__UI_NewID).Encoding = 1252
 
@@ -38,9 +38,16 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoOficioLB", 116, 23, 105, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "UltimoOficio"
-    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).VAlign = __UI_Middle
+    ToolTip(__UI_NewID) = "Clique para editar"
+
+    __UI_NewID = __UI_NewControl(__UI_Type_TextBox, "UltimoOficioTB", 116, 23, 105, 10, __UI_GetID("Frame1"))
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
+    Control(__UI_NewID).Hidden = True
+    Control(__UI_NewID).NumericOnly = __UI_NumericWithBounds
+    Control(__UI_NewID).Min = 1
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label2", 93, 23, 10, 58, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "Descrição:"
@@ -48,7 +55,7 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimaDescricaoLB", 254, 61, 105, 60, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "UltimaDescricao"
-    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).WordWrap = True
 
@@ -58,7 +65,7 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoUsuarioLB", 254, 23, 105, 35, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "UltimoUsuario"
-    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).VAlign = __UI_Middle
 
@@ -68,7 +75,7 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UsuarioAtualLB", 150, 23, 105, 10, __UI_GetID("PrximoNmero"))
     SetCaption __UI_NewID, "UsuarioAtual"
-    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12, "")
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "DecriaoOpcionalLB", 89, 33, 10, 32, __UI_GetID("PrximoNmero"))
@@ -83,7 +90,7 @@ SUB __UI_LoadForm
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "BT", 256, 76, 58, 74, __UI_GetID("PrximoNmero"))
     SetCaption __UI_NewID, "000"
     ToolTip(__UI_NewID) = "Clique para utilizar este número de ofício"
-    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 72, "")
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 72)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_PictureBox, "PictureBox2", 400, 64, 0, 23, 0)
@@ -99,22 +106,22 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "FirstBT", 28, 23, 228, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, CHR$(17) + CHR$(17)
-    Control(__UI_NewID).Font = SetFont("", 8, "")
+    Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "PreviousBT", 28, 23, 262, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, CHR$(17)
-    Control(__UI_NewID).Font = SetFont("", 8, "")
+    Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "NextBT", 28, 23, 296, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, CHR$(16)
-    Control(__UI_NewID).Font = SetFont("", 8, "")
+    Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "LastBT", 28, 23, 330, 10, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, CHR$(16) + CHR$(16)
-    Control(__UI_NewID).Font = SetFont("", 8, "")
+    Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem3", 66, 18, 0, 4, __UI_GetID("MenuBar1"))
@@ -128,7 +135,7 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label10", 185, 64, 215, 23, 0)
     SetCaption __UI_NewID, "Secretaria Criminal"
-    Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 18, "")
+    Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 18)
     Control(__UI_NewID).BackStyle = __UI_Transparent
     Control(__UI_NewID).Align = __UI_Center
     Control(__UI_NewID).VAlign = __UI_Middle
@@ -163,4 +170,5 @@ SUB __UI_AssignIDs
     MenuItem1 = __UI_GetID("MenuItem1")
     MenuItem2 = __UI_GetID("MenuItem2")
     Label10 = __UI_GetID("Label10")
+    UltimoOficioTB = __UI_GetID("UltimoOficioTB")
 END SUB
