@@ -50,14 +50,16 @@ DIM SHARED Ultimo AS LONG, Proximo AS LONG
 DIM SHARED Atual AS LONG
 DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
-DIM SHARED file$, GenericUser AS STRING
+DIM SHARED file$, backupFile$, GenericUser AS STRING
 
 IF LTRIM$(COMMAND$(2)) = "-civel" THEN
     file$ = "oficios-civel.ini"
+    backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
     Usuario = COMMAND$(1)
     GenericUser = "Secretaria Cível"
 ELSE
     file$ = "oficios.ini"
+    backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-backup.ini"
     Usuario = "Secretaria Criminal"
     GenericUser = Usuario
     IF LEN(COMMAND$(1)) THEN Usuario = COMMAND$(1)
@@ -101,16 +103,20 @@ SUB __UI_OnLoad
 END SUB
 
 SUB DoLocalBackup
-    ff = FREEFILE
-    OPEN file$ FOR BINARY AS #ff
-    a$ = SPACE$(LOF(ff))
-    GET #ff, 1, a$
-    CLOSE #ff
+    'backups are incremental
+    a$ = ReadSetting(file$, "controle", "UltimoNumero")
+    WriteSetting backupFile$, "controle", "UltimoNumero", a$
 
-    OPEN ENVIRON$("USERPROFILE") + "\oficiosBackup.ini" FOR OUTPUT AS #ff: CLOSE #ff
-    OPEN ENVIRON$("USERPROFILE") + "\oficiosBackup.ini" FOR BINARY AS #ff
-    PUT #ff, 1, a$
-    CLOSE #ff
+    FOR i = 1 TO VAL(a$)
+        a$ = ReadSetting(file$, STR$(i), "Descricao")
+        b$ = ReadSetting(file$, STR$(i), "Data")
+        c$ = ReadSetting(file$, STR$(i), "Usuario")
+        IF LEN(a$) > 0 OR LEN(b$) > 0 OR LEN(c$) > 0 THEN
+            IF LEN(a$) THEN WriteSetting backupFile$, STR$(i), "Descricao", a$
+            IF LEN(b$) THEN WriteSetting backupFile$, STR$(i), "Data", b$
+            IF LEN(c$) THEN WriteSetting backupFile$, STR$(i), "Usuario", c$
+        END IF
+    NEXT
 END SUB
 
 SUB __UI_BeforeUpdateDisplay
@@ -136,7 +142,7 @@ SUB __UI_BeforeUpdateDisplay
 END SUB
 
 SUB Refresh
-    a$ = ReadSetting("", "controle", "UltimoNumero")
+    a$ = ReadSetting(file$, "controle", "UltimoNumero")
     IF VAL(a$) <> Ultimo THEN
         IF Atual = Ultimo THEN
             Atual = VAL(a$)
@@ -150,8 +156,8 @@ SUB Refresh
 
     Control(UltimoOficioTB).Max = Ultimo
     Caption(UltimoOficioLB) = STR$(Atual)
-    a$ = ReadSetting("", STR$(Atual), "Descricao")
-    b$ = ReadSetting("", STR$(Atual), "Data")
+    a$ = ReadSetting(file$, STR$(Atual), "Descricao")
+    b$ = ReadSetting(file$, STR$(Atual), "Data")
     IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
         a$ = b$ + ": " + a$
     ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
@@ -160,7 +166,7 @@ SUB Refresh
         a$ = "-"
     END IF
     Caption(UltimaDescricaoLB) = a$
-    Caption(UltimoUsuarioLB) = ReadSetting("", STR$(Atual), "Usuario")
+    Caption(UltimoUsuarioLB) = ReadSetting(file$, STR$(Atual), "Usuario")
 
     LastCheck = TIMER
 END SUB
@@ -194,7 +200,7 @@ SUB __UI_Click (id AS LONG)
         CASE VerHistoricoBT, MenuItem3
             SHELL _HIDE _DONTWAIT "start " + file$
         CASE UltimaDescricaoLB
-            a$ = ReadSetting("", STR$(Atual), "Descricao")
+            a$ = ReadSetting(file$, STR$(Atual), "Descricao")
             IF LEN(a$) THEN
                 Text(DescricaoTB) = a$
                 Control(DescricaoTB).Cursor = LEN(Text(DescricaoTB))
@@ -233,7 +239,7 @@ SUB __UI_MouseEnter (id AS LONG)
         CASE Label2
 
         CASE UltimaDescricaoLB
-            a$ = ReadSetting("", STR$(Atual), "Descricao")
+            a$ = ReadSetting(file$, STR$(Atual), "Descricao")
             IF LEN(a$) THEN
                 ToolTip(UltimaDescricaoLB) = "Clique para copiar"
             ELSE
