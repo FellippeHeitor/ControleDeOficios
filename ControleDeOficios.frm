@@ -105,22 +105,22 @@ SUB __UI_LoadForm
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "FirstBT", 28, 23, 228, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, CHR$(17) + CHR$(17)
+    SetCaption __UI_NewID, "\17;\17;"
     Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "PreviousBT", 28, 23, 262, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, CHR$(17)
+    SetCaption __UI_NewID, "\17;"
     Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "NextBT", 28, 23, 296, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, CHR$(16)
+    SetCaption __UI_NewID, "\16;"
     Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "LastBT", 28, 23, 330, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, CHR$(16) + CHR$(16)
+    SetCaption __UI_NewID, "\16;\16;"
     Control(__UI_NewID).Font = SetFont("", 8)
     Control(__UI_NewID).CanHaveFocus = True
 
