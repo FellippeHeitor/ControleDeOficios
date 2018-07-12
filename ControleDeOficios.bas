@@ -46,7 +46,7 @@ DIM SHARED MenuItem3 AS LONG
 DIM SHARED Label10 AS LONG
 DIM SHARED UltimoOficioTB AS LONG
 
-DIM SHARED Ultimo AS LONG, Proximo AS LONG
+DIM SHARED Primeiro AS LONG, Ultimo AS LONG, Proximo AS LONG
 DIM SHARED Atual AS LONG
 DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
@@ -56,7 +56,7 @@ IF LTRIM$(COMMAND$(2)) = "-civel" THEN
     file$ = "oficios-civel.ini"
     backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
     Usuario = COMMAND$(1)
-    GenericUser = "Secretaria Cível"
+    GenericUser = "Secretaria CÃ­vel"
 ELSE
     file$ = "oficios.ini"
     backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-backup.ini"
@@ -78,6 +78,7 @@ END SUB
 
 SUB __UI_OnLoad
     IniSetForceReload True
+
     a$ = ReadSetting(file$, "controle", "UltimoNumero")
     IF LEN(a$) > 0 THEN
         Ultimo = VAL(a$)
@@ -91,6 +92,25 @@ SUB __UI_OnLoad
         Caption(UltimaDescricaoLB) = "-"
         Caption(UltimoUsuarioLB) = "-"
         Proximo = 1
+    END IF
+
+    IF Proximo > 1 THEN
+        a$ = ReadSetting(file$, "controle", "PrimeiroNumero")
+        IF LEN(a$) = 0 THEN
+            'Find the first record and save the index
+            DIM i AS LONG
+            SHARED IniCODE
+            FOR i = 1 TO Ultimo
+                a$ = ReadSetting(file$, STR$(i), "Usuario")
+                IF IniCODE <> 14 THEN
+                    Primeiro = i
+                    WriteSetting file$, "controle", "PrimeiroNumero", LTRIM$(STR$(Primeiro))
+                    EXIT FOR
+                END IF
+            NEXT
+        ELSE
+            Primeiro = VAL(a$)
+        END IF
     END IF
 
     Caption(ControleDeOficios) = "Controle de Oficios - " + GenericUser
@@ -134,11 +154,10 @@ SUB __UI_BeforeUpdateDisplay
         Control(LastBT).Disabled = True
     END IF
 
-    IF Atual = 1 THEN
+    IF Atual = Primeiro THEN
         Control(FirstBT).Disabled = True
         Control(PreviousBT).Disabled = True
     END IF
-
 END SUB
 
 SUB Refresh
@@ -180,7 +199,7 @@ SUB __UI_Click (id AS LONG)
         CASE MenuItem1
             SYSTEM
         CASE MenuItem2
-            Answer = MessageBox("Controle de Ofícios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
+            Answer = MessageBox("Controle de OfÃ­cios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             IF Answer = MsgBox_Yes THEN
@@ -207,9 +226,9 @@ SUB __UI_Click (id AS LONG)
                 __UI_Focus = DescricaoTB
             END IF
         CASE FirstBT
-            Atual = 1
+            Atual = Primeiro
         CASE PreviousBT
-            Atual = Atual + (Atual - 1 >= 1)
+            Atual = Atual + (Atual - 1 >= Primeiro)
         CASE NextBT
             Atual = Atual - (Atual + 1 <= Ultimo)
         CASE LastBT
@@ -391,6 +410,7 @@ SUB __UI_KeyPress (id AS LONG)
         CASE UltimoOficioTB
             IF __UI_KeyHit = 13 THEN
                 Atual = VAL(Text(UltimoOficioTB))
+                IF Atual < Primeiro THEN Atual = Primeiro
                 Control(UltimoOficioTB).Hidden = True
                 Refresh
                 __UI_ForceRedraw = True
