@@ -70,7 +70,7 @@ FOR i = 1 TO _COMMANDCOUNT
             file$ = "oficios-civel.ini"
             backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
             Usuario = COMMAND$(1)
-            GenericUser = "Secretaria CÃ­vel"
+            GenericUser = "Secretaria Cível"
             EXIT FOR
         CASE "-arquivo"
             file$ = COMMAND$(i + 1)
@@ -204,6 +204,16 @@ SUB __UI_BeforeUpdateDisplay
 END SUB
 
 SUB Refresh
+    a$ = ReadSetting("ControleDeOficios.ini", "controle", "ForceQuitToUpdate")
+    IF a$ = "True" THEN
+        c$ = "updateOficios.exe"
+        FOR i = 1 TO _COMMANDCOUNT
+            c$ = c$ + " " + COMMAND$(i)
+        NEXT
+        SHELL _DONTWAIT c$
+        SYSTEM
+    END IF
+
     IF inSearch THEN
         Caption(UltimoOficioLB) = STR$(SearchResults(searchResultIndex)) + " (" + _TRIM$(STR$(searchResultIndex)) + "/" + _TRIM$(STR$(totalFound)) + ")"
         a$ = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Descricao")
@@ -259,7 +269,7 @@ SUB __UI_Click (id AS LONG)
         CASE MenuItem1
             SYSTEM
         CASE MenuItem2
-            Answer = MessageBox("Controle de OfÃ­cios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
+            Answer = MessageBox("Controle de Ofícios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             IF Answer = MsgBox_Yes THEN
