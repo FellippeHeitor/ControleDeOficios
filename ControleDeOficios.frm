@@ -10,21 +10,25 @@ SUB __UI_LoadForm
     DIM __UI_NewID AS LONG
 
     __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 416, 0, 0, 0)
-    SetCaption __UI_NewID, "Controle de Ofícios"
+    SetCaption __UI_NewID, "Controle de OfÃ­cios"
     Text(__UI_NewID) = "Chromatix-Keyboard-Keys-Hash.ico"
     Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 12)
     Control(__UI_NewID).CenteredWindow = True
     Control(__UI_NewID).Encoding = 1252
 
     __UI_NewID = __UI_NewControl(__UI_Type_Frame, "Frame1", 372, 129, 14, 103, 0)
-    SetCaption __UI_NewID, "Ofícios anteriores"
+    SetCaption __UI_NewID, "OfÃ­cios anteriores"
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).Value = 13
 
     __UI_NewID = __UI_NewControl(__UI_Type_Frame, "PrximoNmero", 372, 160, 14, 248, 0)
-    SetCaption __UI_NewID, "Próximo número:"
+    SetCaption __UI_NewID, "PrÃ³ximo nÃºmero:"
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).Value = 5
+
+    __UI_NewID = __UI_NewControl(__UI_Type_ContextMenu, "CopyMenu", 0, 0, 0, 0, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "CopyMenuCopy", 0, 0, 0, 0, __UI_GetID("CopyMenu"))
+    SetCaption __UI_GetID("CopyMenuCopy"), "Copiar descriÃ§Ã£o"
 
     __UI_NewID = __UI_NewControl(__UI_Type_MenuBar, "MenuBar1", 56, 20, 8, 0, 0)
     SetCaption __UI_NewID, "&Arquivo"
@@ -34,7 +38,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Align = __UI_Right
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "NmeroLB", 93, 23, 10, 10, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, "Número:"
+    SetCaption __UI_NewID, "NÃºmero:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoOficioLB", 87, 23, 105, 10, __UI_GetID("Frame1"))
@@ -53,7 +57,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).NumericOnly = __UI_NumericWithBounds
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label2", 93, 23, 10, 58, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, "Descrição:"
+    SetCaption __UI_NewID, "DescriÃ§Ã£o:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimaDescricaoLB", 254, 61, 105, 60, __UI_GetID("Frame1"))
@@ -61,6 +65,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).WordWrap = True
+    Control(__UI_NewID).ContextMenuID = __UI_GetID("CopyMenu")
 
     __UI_NewID = __UI_NewControl(__UI_Type_TextBox, "UltimaDescricaoTB", 254, 61, 105, 60, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "Termo de Pesquisa"
@@ -70,7 +75,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Hidden = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label3", 93, 23, 10, 34, __UI_GetID("Frame1"))
-    SetCaption __UI_NewID, "Usuário:"
+    SetCaption __UI_NewID, "UsuÃ¡rio:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UltimoUsuarioLB", 254, 23, 105, 35, __UI_GetID("Frame1"))
@@ -88,7 +93,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Hidden = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label4", 93, 23, 10, 10, __UI_GetID("PrximoNmero"))
-    SetCaption __UI_NewID, "Usuário:"
+    SetCaption __UI_NewID, "UsuÃ¡rio:"
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "UsuarioAtualLB", 150, 23, 105, 10, __UI_GetID("PrximoNmero"))
@@ -97,7 +102,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).VAlign = __UI_Middle
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "DecriaoOpcionalLB", 89, 33, 10, 32, __UI_GetID("PrximoNmero"))
-    SetCaption __UI_NewID, "Descrição (opcional):"
+    SetCaption __UI_NewID, "DescriÃ§Ã£o (opcional):"
     Control(__UI_NewID).VAlign = __UI_Middle
     Control(__UI_NewID).WordWrap = True
 
@@ -107,7 +112,7 @@ SUB __UI_LoadForm
 
     __UI_NewID = __UI_NewControl(__UI_Type_Button, "BT", 256, 76, 58, 74, __UI_GetID("PrximoNmero"))
     SetCaption __UI_NewID, "000"
-    ToolTip(__UI_NewID) = "Clique para utilizar este número de ofício"
+    ToolTip(__UI_NewID) = "Clique para utilizar este nÃºmero de ofÃ­cio"
     Control(__UI_NewID).Font = SetFont("arialbd.ttf", 72)
     Control(__UI_NewID).CanHaveFocus = True
 
@@ -145,7 +150,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).CanHaveFocus = True
 
     __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem3", 216, 18, 0, 4, __UI_GetID("MenuBar1"))
-    SetCaption __UI_NewID, "&Visualizar histórico completo...-"
+    SetCaption __UI_NewID, "&Visualizar histÃ³rico completo...-"
 
     __UI_NewID = __UI_NewControl(__UI_Type_MenuItem, "MenuItem1", 66, 18, 0, 28, __UI_GetID("MenuBar1"))
     SetCaption __UI_NewID, "&Sair"
@@ -201,4 +206,6 @@ SUB __UI_AssignIDs
     MenuItem2 = __UI_GetID("MenuItem2")
     Label10 = __UI_GetID("Label10")
     ClearSearchBT = __UI_GetID("ClearSearchBT")
+    CopyMenu = __UI_GetID("CopyMenu")
+    CopyMenuCopy = __UI_GetID("CopyMenuCopy")
 END SUB
