@@ -11,7 +11,9 @@ IniSetForceReload -1
 
 c$ = "ControleDeOficios.exe"
 FOR i = 1 TO _COMMANDCOUNT
-    c$ = c$ + " " + COMMAND$(i)
+    d$ = COMMAND$(i)
+    IF INSTR(d$, " ") > 0 THEN d$ = CHR$(34) + d$ + CHR$(34)
+    c$ = c$ + " " + d$
 NEXT
 
 DO
