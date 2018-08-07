@@ -32,6 +32,7 @@ DIM SHARED UltimaDescricaoLB AS LONG
 DIM SHARED UltimaDescricaoTB AS LONG
 DIM SHARED Label3 AS LONG
 DIM SHARED UltimoUsuarioLB AS LONG
+DIM SHARED UltimoUsuarioTB AS LONG
 DIM SHARED Label4 AS LONG
 DIM SHARED UsuarioAtualLB AS LONG
 DIM SHARED DecriaoOpcionalLB AS LONG
@@ -286,15 +287,13 @@ SUB __UI_Click (id AS LONG)
         CASE VerHistoricoBT, MenuItem3
             SHELL _HIDE _DONTWAIT "start " + file$
         CASE UltimaDescricaoLB
-            'a$ = ReadSetting(file$, STR$(Atual), "Descricao")
-            'IF LEN(a$) THEN
-            '    Text(DescricaoTB) = a$
-            '    Control(DescricaoTB).Cursor = LEN(Text(DescricaoTB))
-            '    __UI_Focus = DescricaoTB
-            'END IF
             Control(UltimaDescricaoTB).Hidden = False
             Text(UltimaDescricaoTB) = ""
             SetFocus UltimaDescricaoTB
+        CASE UltimoUsuarioLB
+            Control(UltimoUsuarioTB).Hidden = False
+            Text(UltimoUsuarioTB) = ""
+            SetFocus UltimoUsuarioTB
         CASE FirstBT
             IF inSearch THEN searchResultIndex = 1 ELSE Atual = Primeiro
         CASE PreviousBT
@@ -503,13 +502,14 @@ SUB __UI_KeyPress (id AS LONG)
                 SetFocus DescricaoTB
                 __UI_ForceRedraw = True
             END IF
-        CASE UltimaDescricaoTB
+        CASE UltimoUsuarioTB, UltimaDescricaoTB
+            IF id = UltimoUsuarioTB THEN term$ = "Usuario" ELSE term$ = "Descricao"
             IF __UI_KeyHit = 13 THEN
                 DIM tempSearchString$, SearchString$, i AS LONG, j AS LONG
                 REDIM Element$(0), totalElements AS LONG, readingElement AS _BYTE
 
                 SearchString$ = ""
-                tempSearchString$ = _TRIM$(Text(UltimaDescricaoTB))
+                tempSearchString$ = _TRIM$(Text(id))
                 IF LEN(tempSearchString$) THEN
                     FOR i = 1 TO LEN(tempSearchString$)
                         IF ASC(tempSearchString$, i) = 37 THEN
@@ -546,7 +546,7 @@ SUB __UI_KeyPress (id AS LONG)
                     'Search through records...
                     totalFound = 0
                     FOR i = Primeiro TO Ultimo
-                        a$ = UCASE$(ReadSetting(file$, STR$(i), "Descricao"))
+                        a$ = UCASE$(ReadSetting(file$, STR$(i), term$))
                         IF totalElements = 1 THEN
                             IF (INSTR(SearchString$, "%") = 0 AND a$ = Element$(1)) OR _
                                (LEFT$(SearchString$, 1) = "%" AND RIGHT$(SearchString$, 1) <> "%" AND RIGHT$(a$, LEN(Element$(1))) = Element$(1)) OR _
@@ -595,13 +595,14 @@ SUB __UI_KeyPress (id AS LONG)
                         inSearch = True
                         searchResultIndex = 1
                     ELSE
+                        inSearch = False
                         Answer = MessageBox("Nenhum resultado encontrado", "", MsgBox_OkOnly + MsgBox_Critical)
                     END IF
                 END IF
-                Control(UltimaDescricaoTB).Hidden = True
+                Control(id).Hidden = True
                 Refresh
             ELSEIF __UI_KeyHit = 27 THEN
-                Control(UltimaDescricaoTB).Hidden = True
+                Control(id).Hidden = True
                 SetFocus DescricaoTB
                 __UI_ForceRedraw = True
             END IF

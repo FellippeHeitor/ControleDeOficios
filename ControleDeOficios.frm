@@ -79,6 +79,14 @@ SUB __UI_LoadForm
     Control(__UI_NewID).HasBorder = True
     Control(__UI_NewID).VAlign = __UI_Middle
 
+    __UI_NewID = __UI_NewControl(__UI_Type_TextBox, "UltimoUsuarioTB", 254, 23, 105, 35, __UI_GetID("Frame1"))
+    SetCaption __UI_NewID, "UltimoUsuario"
+    SetCaption __UI_NewID, "Termo de Pesquisa"
+    Control(__UI_NewID).Font = SetFont("arialbd.ttf", 12)
+    Control(__UI_NewID).HasBorder = True
+    Control(__UI_NewID).CanHaveFocus = True
+    Control(__UI_NewID).Hidden = True
+
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label4", 93, 23, 10, 10, __UI_GetID("PrximoNmero"))
     SetCaption __UI_NewID, "Usuário:"
     Control(__UI_NewID).VAlign = __UI_Middle
@@ -176,6 +184,7 @@ SUB __UI_AssignIDs
     UltimaDescricaoTB = __UI_GetID("UltimaDescricaoTB")
     Label3 = __UI_GetID("Label3")
     UltimoUsuarioLB = __UI_GetID("UltimoUsuarioLB")
+    UltimoUsuarioTB = __UI_GetID("UltimoUsuarioTB")
     Label4 = __UI_GetID("Label4")
     UsuarioAtualLB = __UI_GetID("UsuarioAtualLB")
     DecriaoOpcionalLB = __UI_GetID("DecriaoOpcionalLB")
