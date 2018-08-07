@@ -52,18 +52,31 @@ DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
 DIM SHARED file$, backupFile$, GenericUser AS STRING
 
-IF LTRIM$(COMMAND$(2)) = "-civel" THEN
-    file$ = "oficios-civel.ini"
-    backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
-    Usuario = COMMAND$(1)
-    GenericUser = "Secretaria CÃ­vel"
-ELSE
-    file$ = "oficios.ini"
-    backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-backup.ini"
-    Usuario = "Secretaria Criminal"
-    GenericUser = Usuario
-    IF LEN(COMMAND$(1)) THEN Usuario = COMMAND$(1)
-END IF
+file$ = "oficios.ini"
+backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-backup.ini"
+Usuario = "Secretaria Criminal"
+GenericUser = Usuario
+IF LEN(COMMAND$(1)) THEN Usuario = COMMAND$(1)
+
+DIM i AS INTEGER
+FOR i = 1 TO _COMMANDCOUNT
+    SELECT CASE LCASE$(COMMAND$(i))
+        CASE "-civel"
+            file$ = "oficios-civel.ini"
+            backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
+            Usuario = COMMAND$(1)
+            GenericUser = "Secretaria Cível"
+            EXIT FOR
+        CASE "-arquivo"
+            file$ = COMMAND$(i + 1)
+            backupFile$ = ENVIRON$("USERPROFILE") + "\" + file$ + "-backup.ini"
+            file$ = file$ + ".ini"
+        CASE "-usuario"
+            Usuario = COMMAND$(i + 1)
+        CASE "-setor"
+            GenericUser = COMMAND$(i + 1)
+    END SELECT
+NEXT
 
 ': External modules: ---------------------------------------------------------------
 '$INCLUDE:'InForm\InForm.ui'
