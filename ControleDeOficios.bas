@@ -48,6 +48,8 @@ DIM SHARED MenuItem3 AS LONG
 DIM SHARED Label10 AS LONG
 DIM SHARED UltimoOficioTB AS LONG
 DIM SHARED ClearSearchBT AS LONG
+DIM SHARED CopyMenu AS LONG
+DIM SHARED CopyMenuCopy AS LONG
 
 DIM SHARED Primeiro AS LONG, Ultimo AS LONG, Proximo AS LONG
 DIM SHARED Atual AS LONG
@@ -70,7 +72,7 @@ FOR i = 1 TO _COMMANDCOUNT
             file$ = "oficios-civel.ini"
             backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
             Usuario = COMMAND$(1)
-            GenericUser = "Secretaria Cível"
+            GenericUser = "Secretaria CÃ­vel"
             EXIT FOR
         CASE "-arquivo"
             file$ = COMMAND$(i + 1)
@@ -208,7 +210,9 @@ SUB Refresh
     IF a$ = "True" THEN
         c$ = "updateOficios.exe"
         FOR i = 1 TO _COMMANDCOUNT
-            c$ = c$ + " " + COMMAND$(i)
+            d$ = COMMAND$(i)
+            IF INSTR(d$, " ") > 0 THEN d$ = CHR$(34) + d$ + CHR$(34)
+            c$ = c$ + " " + d$
         NEXT
         SHELL _DONTWAIT c$
         SYSTEM
@@ -266,10 +270,13 @@ END SUB
 
 SUB __UI_Click (id AS LONG)
     SELECT EVERYCASE id
+        CASE CopyMenuCopy
+            a$ = ReadSetting(file$, STR$(Atual), "Descricao")
+            IF LEN(a$) THEN _CLIPBOARD$ = a$
         CASE MenuItem1
             SYSTEM
         CASE MenuItem2
-            Answer = MessageBox("Controle de Ofícios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
+            Answer = MessageBox("Controle de OfÃ­cios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             IF Answer = MsgBox_Yes THEN
@@ -347,6 +354,7 @@ SUB __UI_MouseEnter (id AS LONG)
 
         CASE UltimaDescricaoLB
             a$ = ReadSetting(file$, STR$(Atual), "Descricao")
+
             IF LEN(a$) THEN
                 ToolTip(UltimaDescricaoLB) = "Clique para copiar"
             ELSE
