@@ -206,6 +206,7 @@ SUB __UI_BeforeUpdateDisplay
 END SUB
 
 SUB Refresh
+    WriteSetting "ControleDeOficios.ini", GenericUser + "-" + Usuario, "Ping", DATE$ + ", " + TIME$
     a$ = ReadSetting("ControleDeOficios.ini", "controle", "ForceQuitToUpdate")
     IF a$ = "True" THEN
         c$ = "updateOficios.exe"
