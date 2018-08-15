@@ -139,6 +139,7 @@ SUB __UI_OnLoad
     Caption(Label10) = GenericUser
     Caption(UsuarioAtualLB) = Usuario
     __UI_Focus = DescricaoTB
+    __UI_DefaultButtonID = BT
     DoLocalBackup
     LastCheck = TIMER
 END SUB
@@ -280,6 +281,7 @@ SUB __UI_Click (id AS LONG)
             Answer = MessageBox("Controle de Ofícios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
+            _DELAY .1: _KEYCLEAR
             IF Answer = MsgBox_Yes THEN
                 a$ = LTRIM$(STR$(Proximo))
                 _CLIPBOARD$ = a$
