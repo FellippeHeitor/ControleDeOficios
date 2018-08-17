@@ -509,12 +509,13 @@ SUB __UI_KeyPress (id AS LONG)
         CASE BT
 
         CASE UltimoOficioTB
-            IF __UI_KeyHit = 13 THEN
+            IF __UI_KeyHit = -13 THEN
                 Atual = VAL(Text(UltimoOficioTB))
                 IF Atual < Primeiro THEN Atual = Primeiro
                 Control(UltimoOficioTB).Hidden = True
                 inSearch = False
                 Refresh
+                __UI_KeyHit = 0
             ELSEIF __UI_KeyHit = 27 THEN
                 Control(UltimoOficioTB).Hidden = True
                 SetFocus DescricaoTB
@@ -522,7 +523,7 @@ SUB __UI_KeyPress (id AS LONG)
             END IF
         CASE UltimoUsuarioTB, UltimaDescricaoTB
             IF id = UltimoUsuarioTB THEN term$ = "Usuario" ELSE term$ = "Descricao"
-            IF __UI_KeyHit = 13 THEN
+            IF __UI_KeyHit = -13 THEN
                 DIM tempSearchString$, SearchString$, i AS LONG, j AS LONG
                 REDIM Element$(0), totalElements AS LONG, readingElement AS _BYTE
 
@@ -619,6 +620,7 @@ SUB __UI_KeyPress (id AS LONG)
                 END IF
                 Control(id).Hidden = True
                 Refresh
+                __UI_KeyHit = 0
             ELSEIF __UI_KeyHit = 27 THEN
                 Control(id).Hidden = True
                 SetFocus DescricaoTB
