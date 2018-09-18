@@ -359,7 +359,7 @@ SUB __UI_MouseEnter (id AS LONG)
             a$ = ReadSetting(file$, STR$(Atual), "Descricao")
 
             IF LEN(a$) THEN
-                ToolTip(UltimaDescricaoLB) = "Clique para copiar"
+                ToolTip(UltimaDescricaoLB) = "Botão direito para copiar"
             ELSE
                 ToolTip(UltimaDescricaoLB) = ""
             END IF
