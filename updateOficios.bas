@@ -10,11 +10,13 @@ showScreen
 IniSetForceReload -1
 
 c$ = "ControleDeOficios.exe"
-FOR i = 1 TO _COMMANDCOUNT
-    d$ = COMMAND$(i)
-    IF INSTR(d$, " ") > 0 THEN d$ = CHR$(34) + d$ + CHR$(34)
-    c$ = c$ + " " + d$
-NEXT
+IF COMMAND$(1) <> "-default" THEN
+    FOR i = 1 TO _COMMANDCOUNT
+        d$ = COMMAND$(i)
+        IF INSTR(d$, " ") > 0 THEN d$ = CHR$(34) + d$ + CHR$(34)
+        c$ = c$ + " " + d$
+    NEXT
+END IF
 
 DO
     a$ = ReadSetting("ControleDeOficios.ini", "controle", "ForceQuitToUpdate")
@@ -23,7 +25,7 @@ DO
     _LIMIT 10
 LOOP
 
-'$INCLUDE:'ini.bm'
+'$INCLUDE:'..\INI-Manager\ini.bm'
 
 SUB showScreen
     _SCREENSHOW

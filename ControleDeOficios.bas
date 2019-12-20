@@ -9,16 +9,16 @@
 'License: CC Attribution-Noncommercial-No Derivate 4.0
 'Commercial usage: Not allowed
 
-$VERSIONINFO:FILEVERSION#=0,0,0,1
-$VERSIONINFO:PRODUCTVERSION#=0,0,0,1
+$VERSIONINFO:FILEVERSION#=0,0,0,3
+$VERSIONINFO:PRODUCTVERSION#=0,0,0,3
 $VERSIONINFO:CompanyName=Fellippe Heitor
 $VERSIONINFO:FileDescription=Controle De Oficios TJMG
-$VERSIONINFO:FileVersion=0.1b
+$VERSIONINFO:FileVersion=0.3b
 $VERSIONINFO:InternalName=ControlDeOficios.bas
 $VERSIONINFO:LegalCopyright=Open source
 $VERSIONINFO:OriginalFilename=ControlDeOficios.exe
 $VERSIONINFO:ProductName=Controle De Oficios TJMG
-$VERSIONINFO:ProductVersion=0.1b
+$VERSIONINFO:ProductVersion=0.3b
 $VERSIONINFO:Comments=Made with QB64.
 
 ': Controls' IDs: ------------------------------------------------------------------
@@ -50,14 +50,17 @@ DIM SHARED UltimoOficioTB AS LONG
 DIM SHARED ClearSearchBT AS LONG
 DIM SHARED CopyMenu AS LONG
 DIM SHARED CopyMenuCopy AS LONG
+DIM SHARED StatusBarLB AS LONG
 
-DIM SHARED Primeiro AS LONG, Ultimo AS LONG, Proximo AS LONG
-DIM SHARED Atual AS LONG
+DIM SHARED Primeiro AS _UNSIGNED LONG, Ultimo AS _UNSIGNED LONG, Proximo AS _UNSIGNED LONG
+DIM SHARED Atual AS _UNSIGNED LONG
 DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
 DIM SHARED file$, backupFile$, GenericUser AS STRING
-DIM SHARED inSearch AS _BYTE, totalFound AS LONG, searchResultIndex AS LONG
-REDIM SHARED SearchResults(0) AS LONG
+DIM SHARED inSearch AS _BYTE, totalFound AS _UNSIGNED LONG, searchResultIndex AS _UNSIGNED LONG
+DIM SHARED SearchString$, DoLocalBackup AS _BYTE, DoingLocalBackup AS _BYTE
+DIM SHARED FinishBackupAndClose AS _BYTE
+REDIM SHARED SearchResults(0) AS _UNSIGNED LONG
 
 file$ = "oficios.ini"
 backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-backup.ini"
@@ -72,7 +75,7 @@ FOR i = 1 TO _COMMANDCOUNT
             file$ = "oficios-civel.ini"
             backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
             Usuario = COMMAND$(1)
-            GenericUser = "Secretaria C√≠vel"
+            GenericUser = "Secretaria CÌvel"
             EXIT FOR
         CASE "-arquivo"
             file$ = COMMAND$(i + 1)
@@ -86,9 +89,9 @@ FOR i = 1 TO _COMMANDCOUNT
 NEXT
 
 ': External modules: ---------------------------------------------------------------
-'$INCLUDE:'InForm\InForm.ui'
-'$INCLUDE:'InForm\xp.uitheme'
-'$INCLUDE:'ini.bm'
+'$INCLUDE:'..\InForm\InForm\InForm.ui'
+'$INCLUDE:'..\InForm\InForm\xp.uitheme'
+'$INCLUDE:'..\INI-Manager\ini.bm'
 '$INCLUDE:'ControleDeOficios.frm'
 
 ': Event procedures: ---------------------------------------------------------------
@@ -102,7 +105,7 @@ SUB __UI_OnLoad
     a$ = ReadSetting(file$, "controle", "UltimoNumero")
     IF LEN(a$) > 0 THEN
         Ultimo = VAL(a$)
-        REDIM SearchResults(1 TO Ultimo) AS LONG
+        REDIM SearchResults(1 TO Ultimo) AS _UNSIGNED LONG
         Atual = Ultimo
         Caption(UltimoOficioLB) = a$
         Proximo = Ultimo + 1
@@ -134,31 +137,14 @@ SUB __UI_OnLoad
         END IF
     END IF
 
-    Caption(ControleDeOficios) = "Controle de Oficios - " + GenericUser
+    Caption(ControleDeOficios) = "Controle de OfÌcios - " + GenericUser
     Caption(BT) = LTRIM$(STR$(Proximo))
     Caption(Label10) = GenericUser
     Caption(UsuarioAtualLB) = Usuario
     __UI_Focus = DescricaoTB
     __UI_DefaultButtonID = BT
-    DoLocalBackup
+    DoLocalBackup = True
     LastCheck = TIMER
-END SUB
-
-SUB DoLocalBackup
-    'backups are incremental
-    a$ = ReadSetting(file$, "controle", "UltimoNumero")
-    WriteSetting backupFile$, "controle", "UltimoNumero", a$
-
-    FOR i = 1 TO VAL(a$)
-        a$ = ReadSetting(file$, STR$(i), "Descricao")
-        b$ = ReadSetting(file$, STR$(i), "Data")
-        c$ = ReadSetting(file$, STR$(i), "Usuario")
-        IF LEN(a$) > 0 OR LEN(b$) > 0 OR LEN(c$) > 0 THEN
-            IF LEN(a$) THEN WriteSetting backupFile$, STR$(i), "Descricao", a$
-            IF LEN(b$) THEN WriteSetting backupFile$, STR$(i), "Data", b$
-            IF LEN(c$) THEN WriteSetting backupFile$, STR$(i), "Usuario", c$
-        END IF
-    NEXT
 END SUB
 
 SUB __UI_BeforeUpdateDisplay
@@ -169,6 +155,58 @@ SUB __UI_BeforeUpdateDisplay
 
     IF TIMER - LastCheck > 1 THEN
         Refresh
+    END IF
+
+    DIM a$, b$, c$
+    STATIC LocalBackupStarted AS _BYTE
+    STATIC totalRecordsToBackup AS _UNSIGNED LONG
+    STATIC backupIndex AS _UNSIGNED LONG
+    STATIC lastRecordBackedUp AS _UNSIGNED LONG
+
+    IF DoLocalBackup THEN
+        DoLocalBackup = False
+        DoingLocalBackup = True
+        LocalBackupStarted = False
+    END IF
+
+    IF DoingLocalBackup THEN
+        'backups are incremental
+        IF LocalBackupStarted = False THEN
+            a$ = ReadSetting(file$, "controle", "UltimoNumero")
+            WriteSetting backupFile$, "controle", "UltimoNumero", a$
+            IF lastRecordBackedUp > 0 THEN backupIndex = lastRecordBackedUp ELSE backupIndex = 1
+            totalRecordsToBackup = VAL(a$)
+            LocalBackupStarted = True
+        END IF
+
+        BackupNextItem:
+        Caption(StatusBarLB) = "Salvando backup (" + LTRIM$(STR$(INT(backupIndex / totalRecordsToBackup * 100))) + "%)..."
+
+        a$ = ReadSetting(file$, STR$(backupIndex), "Descricao")
+        b$ = ReadSetting(file$, STR$(backupIndex), "Data")
+        c$ = ReadSetting(file$, STR$(backupIndex), "Usuario")
+        IF LEN(a$) > 0 OR LEN(b$) > 0 OR LEN(c$) > 0 THEN
+            IF LEN(a$) THEN WriteSetting backupFile$, STR$(backupIndex), "Descricao", a$
+            IF LEN(b$) THEN WriteSetting backupFile$, STR$(backupIndex), "Data", b$
+            IF LEN(c$) THEN WriteSetting backupFile$, STR$(backupIndex), "Usuario", c$
+            lastRecordBackedUp = backupIndex
+        END IF
+
+        backupIndex = backupIndex + 1
+        IF backupIndex > totalRecordsToBackup THEN
+            IF FinishBackupAndClose THEN SYSTEM
+            DoingLocalBackup = False
+            LocalBackupStarted = False
+        ELSE
+            IF FinishBackupAndClose THEN
+                _LIMIT 500
+                GOTO BackupNextItem
+            END IF
+        END IF
+    ELSE
+        Caption(StatusBarLB) = "Pronto."
+        Control(StatusBarLB).Redraw = True
+        IF FinishBackupAndClose THEN SYSTEM
     END IF
 
     IF inSearch THEN
@@ -187,6 +225,9 @@ SUB __UI_BeforeUpdateDisplay
             Control(FirstBT).Disabled = True
             Control(PreviousBT).Disabled = True
         END IF
+
+        Caption(StatusBarLB) = "Pesquisa: '" + SearchString$ + "' | Resultados:" + STR$(totalFound)
+        Control(StatusBarLB).Redraw = True
     ELSE
         Control(FirstBT).ForeColor = _RGB32(0)
         Control(PreviousBT).ForeColor = _RGB32(0)
@@ -211,13 +252,17 @@ SUB Refresh
     a$ = ReadSetting("ControleDeOficios.ini", "controle", "ForceQuitToUpdate")
     IF a$ = "True" THEN
         c$ = "updateOficios.exe"
-        FOR i = 1 TO _COMMANDCOUNT
-            d$ = COMMAND$(i)
-            IF INSTR(d$, " ") > 0 THEN d$ = CHR$(34) + d$ + CHR$(34)
-            c$ = c$ + " " + d$
-        NEXT
+        IF _COMMANDCOUNT THEN
+            FOR i = 1 TO _COMMANDCOUNT
+                d$ = COMMAND$(i)
+                IF INSTR(d$, " ") > 0 THEN d$ = CHR$(34) + d$ + CHR$(34)
+                c$ = c$ + " " + d$
+            NEXT
+        ELSE
+            c$ = c$ + " -default"
+        END IF
         SHELL _DONTWAIT c$
-        SYSTEM
+        __UI_BeforeUnload
     END IF
 
     IF inSearch THEN
@@ -267,7 +312,11 @@ SUB Refresh
 END SUB
 
 SUB __UI_BeforeUnload
-
+    IF DoingLocalBackup THEN
+        __UI_UnloadSignal = False
+        _SCREENHIDE
+        FinishBackupAndClose = True
+    END IF
 END SUB
 
 SUB __UI_Click (id AS LONG)
@@ -276,29 +325,29 @@ SUB __UI_Click (id AS LONG)
             a$ = ReadSetting(file$, STR$(Atual), "Descricao")
             IF LEN(a$) THEN _CLIPBOARD$ = a$
         CASE MenuItem1
-            SYSTEM
+            __UI_BeforeUnload
         CASE MenuItem2
-            Answer = MessageBox("Controle de Of√≠cios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018", "", MsgBox_OkOnly + MsgBox_Information)
+            Answer = MessageBox("Controle de OfÌcios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018-2020", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             _DELAY .1: _KEYCLEAR
             IF Answer = MsgBox_Yes THEN
                 a$ = LTRIM$(STR$(Proximo))
                 _CLIPBOARD$ = a$
-                WriteSetting "", a$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
-                WriteSetting "", a$, "Usuario", Usuario
-                IF LEN(Text(DescricaoTB)) THEN WriteSetting "", a$, "Descricao", Text(DescricaoTB)
-                WriteSetting "", "controle", "UltimoNumero", a$
+                WriteSetting file$, a$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
+                WriteSetting file$, a$, "Usuario", Usuario
+                IF LEN(Text(DescricaoTB)) THEN WriteSetting file$, a$, "Descricao", Text(DescricaoTB)
+                WriteSetting file$, "controle", "UltimoNumero", a$
 
                 Atual = Ultimo
-                REDIM SearchResults(1 TO Ultimo) AS LONG
+                REDIM SearchResults(1 TO Ultimo) AS _UNSIGNED LONG
                 inSearch = False
 
                 IF Primeiro = 0 THEN Primeiro = Atual
                 Refresh
                 Text(DescricaoTB) = ""
                 __UI_Focus = DescricaoTB
-                DoLocalBackup
+                DoLocalBackup = True
             END IF
         CASE ClearSearchBT
             inSearch = False
@@ -359,7 +408,7 @@ SUB __UI_MouseEnter (id AS LONG)
             a$ = ReadSetting(file$, STR$(Atual), "Descricao")
 
             IF LEN(a$) THEN
-                ToolTip(UltimaDescricaoLB) = "Bot√£o direito para copiar"
+                ToolTip(UltimaDescricaoLB) = "Bot·o direito para copiar"
             ELSE
                 ToolTip(UltimaDescricaoLB) = ""
             END IF
@@ -524,12 +573,13 @@ SUB __UI_KeyPress (id AS LONG)
         CASE UltimoUsuarioTB, UltimaDescricaoTB
             IF id = UltimoUsuarioTB THEN term$ = "Usuario" ELSE term$ = "Descricao"
             IF __UI_KeyHit = -13 THEN
-                DIM tempSearchString$, SearchString$, i AS LONG, j AS LONG
+                DIM tempSearchString$, i AS LONG, j AS LONG
                 REDIM Element$(0), totalElements AS LONG, readingElement AS _BYTE
 
                 SearchString$ = ""
                 tempSearchString$ = _TRIM$(Text(id))
                 IF LEN(tempSearchString$) THEN
+                    inSearch = True 'updates status bar
                     FOR i = 1 TO LEN(tempSearchString$)
                         IF ASC(tempSearchString$, i) = 37 THEN
                             IF RIGHT$(SearchString$, 1) <> "%" THEN
@@ -539,6 +589,8 @@ SUB __UI_KeyPress (id AS LONG)
                             SearchString$ = SearchString$ + MID$(tempSearchString$, i, 1)
                         END IF
                     NEXT
+
+                    __UI_WaitMessage = "Procurando por '" + SearchString$ + "' - ESC para cancelar"
 
                     'Separate search elements into an array
                     FOR i = 1 TO LEN(SearchString$)
@@ -563,8 +615,11 @@ SUB __UI_KeyPress (id AS LONG)
                     'NEXT
 
                     'Search through records...
+                    DIM k&
                     totalFound = 0
                     FOR i = Primeiro TO Ultimo
+                        k& = _KEYHIT
+                        IF k& = 27 THEN totalFound = 0: EXIT FOR
                         a$ = UCASE$(ReadSetting(file$, STR$(i), term$))
                         IF totalElements = 1 THEN
                             IF (INSTR(SearchString$, "%") = 0 AND a$ = Element$(1)) OR _
@@ -615,7 +670,9 @@ SUB __UI_KeyPress (id AS LONG)
                         searchResultIndex = 1
                     ELSE
                         inSearch = False
-                        Answer = MessageBox("Nenhum resultado encontrado", "", MsgBox_OkOnly + MsgBox_Critical)
+                        IF k& <> 27 THEN
+                            Answer = MessageBox("Nenhum resultado encontrado", "", MsgBox_OkOnly + MsgBox_Critical)
+                        END IF
                     END IF
                 END IF
                 Control(id).Hidden = True
