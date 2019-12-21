@@ -52,12 +52,15 @@ DIM SHARED CopyMenu AS LONG
 DIM SHARED CopyMenuCopy AS LONG
 DIM SHARED StatusBarLB AS LONG
 
-DIM SHARED Primeiro AS _UNSIGNED LONG, Ultimo AS _UNSIGNED LONG, Proximo AS _UNSIGNED LONG
-DIM SHARED Atual AS _UNSIGNED LONG
+DIM SHARED Ultimo AS _UNSIGNED LONG, Proximo AS _UNSIGNED LONG
+DIM SHARED UltimoAno AS INTEGER, TotalRecords AS _UNSIGNED LONG
+DIM SHARED CurrentRecord AS _UNSIGNED LONG
+DIM SHARED EsteAno AS INTEGER
 DIM SHARED Usuario AS STRING
 DIM SHARED LastCheck AS SINGLE
 DIM SHARED file$, backupFile$, GenericUser AS STRING
 DIM SHARED inSearch AS _BYTE, totalFound AS _UNSIGNED LONG, searchResultIndex AS _UNSIGNED LONG
+DIM SHARED Searching AS _BYTE, SearchProgress AS _UNSIGNED LONG
 DIM SHARED SearchString$, DoLocalBackup AS _BYTE, DoingLocalBackup AS _BYTE
 DIM SHARED FinishBackupAndClose AS _BYTE
 REDIM SHARED SearchResults(0) AS _UNSIGNED LONG
@@ -67,6 +70,8 @@ backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-backup.ini"
 Usuario = "Secretaria Criminal"
 GenericUser = Usuario
 IF LEN(COMMAND$(1)) THEN Usuario = COMMAND$(1)
+
+EsteAno = VAL(RIGHT$(DATE$, 4))
 
 DIM i AS INTEGER
 FOR i = 1 TO _COMMANDCOUNT
@@ -100,41 +105,34 @@ SUB __UI_BeforeInit
 END SUB
 
 SUB __UI_OnLoad
+    SetFrameRate 250
+
     IniSetForceReload True
+
+    a$ = ReadSetting(file$, "controle", "registros")
+    IF LEN(a$) > 0 THEN
+        TotalRecords = VAL(a$)
+        REDIM SearchResults(1 TO TotalRecords) AS _UNSIGNED LONG
+        CurrentRecord = TotalRecords
+    END IF
 
     a$ = ReadSetting(file$, "controle", "UltimoNumero")
     IF LEN(a$) > 0 THEN
-        Ultimo = VAL(a$)
-        REDIM SearchResults(1 TO Ultimo) AS _UNSIGNED LONG
-        Atual = Ultimo
+        Ultimo = VAL(LEFT$(a$, INSTR(a$, "/") - 1))
+        UltimoAno = VAL(MID$(a$, INSTR(a$, "/") + 1))
         Caption(UltimoOficioLB) = a$
-        Proximo = Ultimo + 1
+        IF UltimoAno < EsteAno THEN
+            Proximo = 1
+        ELSE
+            Proximo = Ultimo + 1
+        END IF
         Refresh
     ELSE
-        WriteSetting file$, "controle", "UltimoNumero", "0"
+        WriteSetting file$, "controle", "UltimoNumero", "0/0"
         Caption(UltimoOficioLB) = "-"
         Caption(UltimaDescricaoLB) = "-"
         Caption(UltimoUsuarioLB) = "-"
         Proximo = 1
-    END IF
-
-    IF Proximo > 1 THEN
-        a$ = ReadSetting(file$, "controle", "PrimeiroNumero")
-        IF LEN(a$) = 0 THEN
-            'Find the first record and save the index
-            DIM i AS LONG
-            SHARED IniCODE
-            FOR i = 1 TO Ultimo
-                a$ = ReadSetting(file$, STR$(i), "Usuario")
-                IF IniCODE <> 14 THEN
-                    Primeiro = i
-                    WriteSetting file$, "controle", "PrimeiroNumero", LTRIM$(STR$(Primeiro))
-                    EXIT FOR
-                END IF
-            NEXT
-        ELSE
-            Primeiro = VAL(a$)
-        END IF
     END IF
 
     Caption(ControleDeOficios) = "Controle de Ofícios - " + GenericUser
@@ -173,19 +171,23 @@ SUB __UI_BeforeUpdateDisplay
         'backups are incremental
         IF LocalBackupStarted = False THEN
             a$ = ReadSetting(file$, "controle", "UltimoNumero")
+            b$ = ReadSetting(file$, "controle", "registros")
             WriteSetting backupFile$, "controle", "UltimoNumero", a$
+            WriteSetting backupFile$, "controle", "registros", b$
             IF lastRecordBackedUp > 0 THEN backupIndex = lastRecordBackedUp ELSE backupIndex = 1
-            totalRecordsToBackup = VAL(a$)
+            totalRecordsToBackup = VAL(b$)
             LocalBackupStarted = True
         END IF
 
         BackupNextItem:
-        Caption(StatusBarLB) = "Salvando backup (" + LTRIM$(STR$(INT(backupIndex / totalRecordsToBackup * 100))) + "%)..."
+        Caption(StatusBarLB) = "Salvando backup local (" + LTRIM$(STR$(INT(backupIndex / totalRecordsToBackup * 100))) + "%)..."
 
+        num$ = ReadSetting(file$, STR$(backupIndex), "Numero")
         a$ = ReadSetting(file$, STR$(backupIndex), "Descricao")
         b$ = ReadSetting(file$, STR$(backupIndex), "Data")
         c$ = ReadSetting(file$, STR$(backupIndex), "Usuario")
-        IF LEN(a$) > 0 OR LEN(b$) > 0 OR LEN(c$) > 0 THEN
+        IF LEN(num$) > 0 OR LEN(a$) > 0 OR LEN(b$) > 0 OR LEN(c$) > 0 THEN
+            IF LEN(num$) THEN WriteSetting backupFile$, STR$(backupIndex), "Numero", num$
             IF LEN(a$) THEN WriteSetting backupFile$, STR$(backupIndex), "Descricao", a$
             IF LEN(b$) THEN WriteSetting backupFile$, STR$(backupIndex), "Data", b$
             IF LEN(c$) THEN WriteSetting backupFile$, STR$(backupIndex), "Usuario", c$
@@ -199,7 +201,7 @@ SUB __UI_BeforeUpdateDisplay
             LocalBackupStarted = False
         ELSE
             IF FinishBackupAndClose THEN
-                _LIMIT 500
+                _LIMIT 1000
                 GOTO BackupNextItem
             END IF
         END IF
@@ -226,7 +228,12 @@ SUB __UI_BeforeUpdateDisplay
             Control(PreviousBT).Disabled = True
         END IF
 
-        Caption(StatusBarLB) = "Pesquisa: '" + SearchString$ + "' | Resultados:" + STR$(totalFound)
+        IF Searching THEN
+            Caption(StatusBarLB) = "Buscando " + CHR$(34) + SearchString$ + CHR$(34) + " (" + LTRIM$(STR$(INT(SearchProgress / TotalRecords * 100))) + "%)..."
+            IF totalFound THEN Caption(StatusBarLB) = Caption(StatusBarLB) + " | " + LTRIM$(STR$(totalFound)) + " encontrados."
+        ELSE
+            Caption(StatusBarLB) = "Busca por " + CHR$(34) + SearchString$ + CHR$(34) + " | Resultado " + LTRIM$(STR$(searchResultIndex)) + " de" + STR$(totalFound) + "."
+        END IF
         Control(StatusBarLB).Redraw = True
     ELSE
         Control(FirstBT).ForeColor = _RGB32(0)
@@ -235,12 +242,12 @@ SUB __UI_BeforeUpdateDisplay
         Control(LastBT).ForeColor = _RGB32(0)
         Control(ClearSearchBT).Disabled = True
 
-        IF Atual = Ultimo THEN
+        IF CurrentRecord = TotalRecords THEN
             Control(NextBT).Disabled = True
             Control(LastBT).Disabled = True
         END IF
 
-        IF Atual = Primeiro THEN
+        IF CurrentRecord <= 1 THEN
             Control(FirstBT).Disabled = True
             Control(PreviousBT).Disabled = True
         END IF
@@ -248,6 +255,8 @@ SUB __UI_BeforeUpdateDisplay
 END SUB
 
 SUB Refresh
+    STATIC PrevRecord AS _UNSIGNED LONG
+
     WriteSetting "ControleDeOficios.ini", GenericUser + "-" + Usuario, "Ping", DATE$ + ", " + TIME$
     a$ = ReadSetting("ControleDeOficios.ini", "controle", "ForceQuitToUpdate")
     IF a$ = "True" THEN
@@ -266,45 +275,53 @@ SUB Refresh
     END IF
 
     IF inSearch THEN
-        Caption(UltimoOficioLB) = STR$(SearchResults(searchResultIndex)) + " (" + _TRIM$(STR$(searchResultIndex)) + "/" + _TRIM$(STR$(totalFound)) + ")"
-        a$ = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Descricao")
-        b$ = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Data")
-        IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
-            a$ = b$ + ": " + a$
-        ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
-            a$ = "Expedido em " + b$
-        ELSEIF LEN(a$) = 0 AND LEN(b$) = 0 THEN
-            a$ = "-"
-        END IF
-        Caption(UltimaDescricaoLB) = a$
-        Caption(UltimoUsuarioLB) = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Usuario")
-        Atual = SearchResults(searchResultIndex)
-    ELSE
-        a$ = ReadSetting(file$, "controle", "UltimoNumero")
-        IF VAL(a$) <> Ultimo THEN
-            IF Atual = Ultimo THEN
-                Atual = VAL(a$)
-                Ultimo = Atual
-            ELSE
-                Ultimo = VAL(a$)
+        IF PrevRecord <> SearchResults(searchResultIndex) THEN
+            Caption(UltimoOficioLB) = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Numero")
+            a$ = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Descricao")
+            b$ = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Data")
+            IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
+                a$ = b$ + ": " + a$
+            ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
+                a$ = "Expedido em " + b$
+            ELSEIF LEN(a$) = 0 AND LEN(b$) = 0 THEN
+                a$ = "-"
             END IF
+            Caption(UltimaDescricaoLB) = a$
+            Caption(UltimoUsuarioLB) = ReadSetting(file$, STR$(SearchResults(searchResultIndex)), "Usuario")
+            CurrentRecord = SearchResults(searchResultIndex)
+            PrevRecord = CurrentRecord
+        END IF
+    ELSE
+        a$ = ReadSetting(file$, "controle", "registros")
+        IF VAL(a$) <> TotalRecords THEN
+            IF CurrentRecord = TotalRecords THEN
+                CurrentRecord = VAL(a$)
+            END IF
+            TotalRecords = VAL(a$)
+
+            a$ = ReadSetting(file$, "controle", "UltimoNumero")
+            Ultimo = VAL(LEFT$(a$, INSTR(a$, "/") - 1))
+            Caption(UltimoOficioLB) = a$
             Proximo = Ultimo + 1
+
             Caption(BT) = LTRIM$(STR$(Proximo))
         END IF
 
-        Control(UltimoOficioTB).Max = Ultimo
-        Caption(UltimoOficioLB) = STR$(Atual)
-        a$ = ReadSetting(file$, STR$(Atual), "Descricao")
-        b$ = ReadSetting(file$, STR$(Atual), "Data")
-        IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
-            a$ = b$ + ": " + a$
-        ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
-            a$ = "Expedido em " + b$
-        ELSEIF LEN(a$) = 0 AND LEN(b$) = 0 THEN
-            a$ = "-"
+        IF PrevRecord <> CurrentRecord THEN
+            Caption(UltimoOficioLB) = _TRIM$(ReadSetting(file$, STR$(CurrentRecord), "Numero"))
+            a$ = ReadSetting(file$, STR$(CurrentRecord), "Descricao")
+            b$ = ReadSetting(file$, STR$(CurrentRecord), "Data")
+            IF LEN(a$) > 0 AND LEN(b$) > 0 THEN
+                a$ = b$ + ": " + a$
+            ELSEIF LEN(a$) = 0 AND LEN(b$) > 0 THEN
+                a$ = "Expedido em " + b$
+            ELSEIF LEN(a$) = 0 AND LEN(b$) = 0 THEN
+                a$ = "-"
+            END IF
+            Caption(UltimaDescricaoLB) = a$
+            Caption(UltimoUsuarioLB) = ReadSetting(file$, STR$(CurrentRecord), "Usuario")
+            PrevRecord = CurrentRecord
         END IF
-        Caption(UltimaDescricaoLB) = a$
-        Caption(UltimoUsuarioLB) = ReadSetting(file$, STR$(Atual), "Usuario")
     END IF
 
     __UI_ForceRedraw = True
@@ -322,7 +339,7 @@ END SUB
 SUB __UI_Click (id AS LONG)
     SELECT EVERYCASE id
         CASE CopyMenuCopy
-            a$ = ReadSetting(file$, STR$(Atual), "Descricao")
+            a$ = ReadSetting(file$, STR$(CurrentRecord), "Descricao")
             IF LEN(a$) THEN _CLIPBOARD$ = a$
         CASE MenuItem1
             __UI_BeforeUnload
@@ -332,18 +349,21 @@ SUB __UI_Click (id AS LONG)
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             _DELAY .1: _KEYCLEAR
             IF Answer = MsgBox_Yes THEN
-                a$ = LTRIM$(STR$(Proximo))
+                a$ = LTRIM$(STR$(Proximo)) + "/" + LTRIM$(STR$(EsteAno))
                 _CLIPBOARD$ = a$
-                WriteSetting file$, a$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
-                WriteSetting file$, a$, "Usuario", Usuario
-                IF LEN(Text(DescricaoTB)) THEN WriteSetting file$, a$, "Descricao", Text(DescricaoTB)
+                nextRecord$ = LTRIM$(STR$(TotalRecords + 1))
+                WriteSetting file$, nextRecord$, "Numero", a$
+                WriteSetting file$, nextRecord$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
+                WriteSetting file$, nextRecord$, "Usuario", Usuario
+                IF LEN(Text(DescricaoTB)) THEN WriteSetting file$, nextRecord$, "Descricao", Text(DescricaoTB)
                 WriteSetting file$, "controle", "UltimoNumero", a$
+                WriteSetting file$, "controle", "registros", nextRecord$
 
-                Atual = Ultimo
-                REDIM SearchResults(1 TO Ultimo) AS _UNSIGNED LONG
+                CurrentRecord = TotalRecords + 1
                 inSearch = False
+                REDIM SearchResults(1 TO TotalRecords + 1) AS _UNSIGNED LONG
 
-                IF Primeiro = 0 THEN Primeiro = Atual
+                IF Primeiro = 0 THEN Primeiro = CurrentRecord
                 Refresh
                 Text(DescricaoTB) = ""
                 __UI_Focus = DescricaoTB
@@ -364,28 +384,29 @@ SUB __UI_Click (id AS LONG)
             Text(UltimoUsuarioTB) = ""
             SetFocus UltimoUsuarioTB
         CASE FirstBT
-            IF inSearch THEN searchResultIndex = 1 ELSE Atual = Primeiro
+            IF inSearch THEN searchResultIndex = 1 ELSE CurrentRecord = 1
         CASE PreviousBT
             IF inSearch THEN
                 searchResultIndex = searchResultIndex + (searchResultIndex - 1 >= 1)
             ELSE
-                Atual = Atual + (Atual - 1 >= Primeiro)
+                CurrentRecord = CurrentRecord + (CurrentRecord - 1 >= 1)
             END IF
         CASE NextBT
             IF inSearch THEN
                 searchResultIndex = searchResultIndex - (searchResultIndex + 1 <= totalFound)
             ELSE
-                Atual = Atual - (Atual + 1 <= Ultimo)
+                CurrentRecord = CurrentRecord - (CurrentRecord + 1 <= TotalRecords)
             END IF
         CASE LastBT
-            IF inSearch THEN searchResultIndex = totalFound ELSE Atual = Ultimo
+            IF inSearch THEN searchResultIndex = totalFound ELSE CurrentRecord = TotalRecords
         CASE FirstBT, PreviousBT, NextBT, LastBT
+            LastCheck = 0
             Refresh
             Control(UltimoOficioTB).Hidden = True
             Control(UltimaDescricaoTB).Hidden = True
         CASE UltimoOficioLB
             Control(UltimoOficioTB).Hidden = False
-            Text(UltimoOficioTB) = LTRIM$(STR$(Atual))
+            Text(UltimoOficioTB) = _TRIM$(ReadSetting(file$, STR$(CurrentRecord), "Numero"))
             SetFocus UltimoOficioTB
     END SELECT
 END SUB
@@ -405,7 +426,7 @@ SUB __UI_MouseEnter (id AS LONG)
         CASE Label2
 
         CASE UltimaDescricaoLB
-            a$ = ReadSetting(file$, STR$(Atual), "Descricao")
+            a$ = ReadSetting(file$, STR$(CurrentRecord), "Descricao")
 
             IF LEN(a$) THEN
                 ToolTip(UltimaDescricaoLB) = "Botáo direito para copiar"
@@ -552,34 +573,28 @@ END SUB
 SUB __UI_KeyPress (id AS LONG)
     IF __UI_KeyHit = 27 AND inSearch = True THEN inSearch = False: SetFocus DescricaoTB: Refresh
 
-    SELECT CASE id
+    SELECT EVERYCASE id
         CASE DescricaoTB
 
         CASE BT
 
         CASE UltimoOficioTB
-            IF __UI_KeyHit = -13 THEN
-                Atual = VAL(Text(UltimoOficioTB))
-                IF Atual < Primeiro THEN Atual = Primeiro
-                Control(UltimoOficioTB).Hidden = True
-                inSearch = False
-                Refresh
-                __UI_KeyHit = 0
-            ELSEIF __UI_KeyHit = 27 THEN
-                Control(UltimoOficioTB).Hidden = True
-                SetFocus DescricaoTB
-                __UI_ForceRedraw = True
-            END IF
-        CASE UltimoUsuarioTB, UltimaDescricaoTB
-            IF id = UltimoUsuarioTB THEN term$ = "Usuario" ELSE term$ = "Descricao"
+            term$ = "Numero"
+        CASE UltimoUsuarioTB
+            term$ = "Usuario"
+        CASE UltimaDescricaoTB
+            term$ = "Descricao"
+        CASE UltimoOficioTB, UltimoUsuarioTB, UltimaDescricaoTB
             IF __UI_KeyHit = -13 THEN
                 DIM tempSearchString$, i AS LONG, j AS LONG
                 REDIM Element$(0), totalElements AS LONG, readingElement AS _BYTE
 
                 SearchString$ = ""
                 tempSearchString$ = _TRIM$(Text(id))
+                Control(id).Hidden = True
                 IF LEN(tempSearchString$) THEN
                     inSearch = True 'updates status bar
+                    Searching = True
                     FOR i = 1 TO LEN(tempSearchString$)
                         IF ASC(tempSearchString$, i) = 37 THEN
                             IF RIGHT$(SearchString$, 1) <> "%" THEN
@@ -608,27 +623,22 @@ SUB __UI_KeyPress (id AS LONG)
                         END IF
                     NEXT
 
-                    '$CONSOLE
-                    '_ECHO STR$(totalElements)
-                    'FOR i = 1 TO totalElements
-                    '    _ECHO Element$(i)
-                    'NEXT
-
                     'Search through records...
                     DIM k&
                     totalFound = 0
-                    FOR i = Primeiro TO Ultimo
+                    searchResultIndex = 1
+                    FOR SearchProgress = 1 TO TotalRecords
                         k& = _KEYHIT
                         IF k& = 27 THEN totalFound = 0: EXIT FOR
-                        a$ = UCASE$(ReadSetting(file$, STR$(i), term$))
+                        a$ = UCASE$(ReadSetting(file$, STR$(SearchProgress), term$))
                         IF totalElements = 1 THEN
                             IF (INSTR(SearchString$, "%") = 0 AND a$ = Element$(1)) OR _
                                (LEFT$(SearchString$, 1) = "%" AND RIGHT$(SearchString$, 1) <> "%" AND RIGHT$(a$, LEN(Element$(1))) = Element$(1)) OR _
                                (LEFT$(SearchString$, 1) <> "%" AND RIGHT$(SearchString$, 1) = "%" AND LEFT$(a$, LEN(Element$(1))) = Element$(1)) OR _
                                (LEFT$(SearchString$, 1) = "%" AND RIGHT$(SearchString$, 1) = "%" AND INSTR(a$, Element$(1)) > 0) THEN
                                 totalFound = totalFound + 1
-                                IF totalFound = 1 THEN Atual = i
-                                SearchResults(totalFound) = i
+                                IF totalFound = 1 THEN CurrentRecord = SearchProgress
+                                SearchResults(totalFound) = SearchProgress
                             END IF
                         ELSE
                             DIM lastPosition AS LONG, found AS _BYTE
@@ -659,15 +669,15 @@ SUB __UI_KeyPress (id AS LONG)
                             NEXT
                             IF found THEN
                                 totalFound = totalFound + 1
-                                IF totalFound = 1 THEN Atual = i
-                                SearchResults(totalFound) = i
+                                IF totalFound = 1 THEN CurrentRecord = SearchProgress
+                                SearchResults(totalFound) = SearchProgress
                             END IF
                         END IF
+                        __UI_DoEvents
                     NEXT
 
                     IF totalFound > 0 THEN
                         inSearch = True
-                        searchResultIndex = 1
                     ELSE
                         inSearch = False
                         IF k& <> 27 THEN
@@ -675,7 +685,7 @@ SUB __UI_KeyPress (id AS LONG)
                         END IF
                     END IF
                 END IF
-                Control(id).Hidden = True
+                Searching = False
                 Refresh
                 __UI_KeyHit = 0
             ELSEIF __UI_KeyHit = 27 THEN

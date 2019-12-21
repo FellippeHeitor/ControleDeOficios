@@ -8,7 +8,7 @@ SUB __UI_LoadForm
     $EXEICON:'./Chromatix-Keyboard-Keys-Hash.ico'
     DIM __UI_NewID AS LONG
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 435, 0, 0, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_Form, "ControleDeOficios", 400, 440, 0, 0, 0)
     SetCaption __UI_NewID, "Controle de Ofícios"
     Text(__UI_NewID) = "Chromatix-Keyboard-Keys-Hash.ico"
     Control(__UI_NewID).Font = SetFont("arial.ttf?/Library/Fonts/Arial.ttf?InForm/resources/NotoMono-Regular.ttf?cour.ttf", 12)
@@ -53,7 +53,6 @@ SUB __UI_LoadForm
     Control(__UI_NewID).Min = 1
     Control(__UI_NewID).CanHaveFocus = True
     Control(__UI_NewID).Hidden = True
-    Control(__UI_NewID).NumericOnly = __UI_NumericWithBounds
 
     __UI_NewID = __UI_NewControl(__UI_Type_Label, "Label2", 93, 23, 10, 58, __UI_GetID("Frame1"))
     SetCaption __UI_NewID, "Descrição:"
@@ -172,7 +171,7 @@ SUB __UI_LoadForm
     Control(__UI_NewID).CanHaveFocus = True
     Control(__UI_NewID).Disabled = True
 
-    __UI_NewID = __UI_NewControl(__UI_Type_Label, "StatusBarLB", 400, 23, 0, 412, 0)
+    __UI_NewID = __UI_NewControl(__UI_Type_Label, "StatusBarLB", 400, 28, 0, 412, 0)
     __UI_RegisterResult = 0
     SetCaption __UI_NewID, "Status bar"
     Control(__UI_NewID).HasBorder = True
