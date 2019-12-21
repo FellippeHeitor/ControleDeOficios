@@ -9,6 +9,8 @@
 'License: CC Attribution-Noncommercial-No Derivate 4.0
 'Commercial usage: Not allowed
 
+CONST Versao = "0.3b"
+
 $VERSIONINFO:FILEVERSION#=0,0,0,3
 $VERSIONINFO:PRODUCTVERSION#=0,0,0,3
 $VERSIONINFO:CompanyName=Fellippe Heitor
@@ -116,7 +118,7 @@ SUB __UI_OnLoad
         CurrentRecord = TotalRecords
     END IF
 
-    a$ = ReadSetting(file$, "controle", "UltimoNumero")
+    a$ = ReadSetting(file$, STR$(TotalRecords), "Numero")
     IF LEN(a$) > 0 THEN
         Ultimo = VAL(LEFT$(a$, INSTR(a$, "/") - 1))
         UltimoAno = VAL(MID$(a$, INSTR(a$, "/") + 1))
@@ -128,7 +130,6 @@ SUB __UI_OnLoad
         END IF
         Refresh
     ELSE
-        WriteSetting file$, "controle", "UltimoNumero", "0/0"
         Caption(UltimoOficioLB) = "-"
         Caption(UltimaDescricaoLB) = "-"
         Caption(UltimoUsuarioLB) = "-"
@@ -159,8 +160,6 @@ SUB __UI_BeforeUpdateDisplay
     STATIC LocalBackupStarted AS _BYTE
     STATIC totalRecordsToBackup AS _UNSIGNED LONG
     STATIC backupIndex AS _UNSIGNED LONG
-    STATIC lastRecordBackedUp AS _UNSIGNED LONG
-
     IF DoLocalBackup THEN
         DoLocalBackup = False
         DoingLocalBackup = True
@@ -170,11 +169,10 @@ SUB __UI_BeforeUpdateDisplay
     IF DoingLocalBackup THEN
         'backups are incremental
         IF LocalBackupStarted = False THEN
-            a$ = ReadSetting(file$, "controle", "UltimoNumero")
             b$ = ReadSetting(file$, "controle", "registros")
-            WriteSetting backupFile$, "controle", "UltimoNumero", a$
-            WriteSetting backupFile$, "controle", "registros", b$
-            IF lastRecordBackedUp > 0 THEN backupIndex = lastRecordBackedUp ELSE backupIndex = 1
+            c$ = ReadSetting(backupFile$, "controle", "registros")
+            IF VAL(c$) > 0 THEN backupIndex = VAL(c$) ELSE backupIndex = 1
+            WriteSetting backupFile$, "controle", "versao", Versao
             totalRecordsToBackup = VAL(b$)
             LocalBackupStarted = True
         END IF
@@ -191,11 +189,12 @@ SUB __UI_BeforeUpdateDisplay
             IF LEN(a$) THEN WriteSetting backupFile$, STR$(backupIndex), "Descricao", a$
             IF LEN(b$) THEN WriteSetting backupFile$, STR$(backupIndex), "Data", b$
             IF LEN(c$) THEN WriteSetting backupFile$, STR$(backupIndex), "Usuario", c$
-            lastRecordBackedUp = backupIndex
         END IF
 
         backupIndex = backupIndex + 1
         IF backupIndex > totalRecordsToBackup THEN
+            b$ = ReadSetting(file$, "controle", "registros")
+            WriteSetting backupFile$, "controle", "registros", b$
             IF FinishBackupAndClose THEN SYSTEM
             DoingLocalBackup = False
             LocalBackupStarted = False
@@ -271,7 +270,7 @@ SUB Refresh
             c$ = c$ + " -default"
         END IF
         SHELL _DONTWAIT c$
-        __UI_BeforeUnload
+        SYSTEM
     END IF
 
     IF inSearch THEN
@@ -299,7 +298,7 @@ SUB Refresh
             END IF
             TotalRecords = VAL(a$)
 
-            a$ = ReadSetting(file$, "controle", "UltimoNumero")
+            a$ = ReadSetting(file$, STR$(TotalRecords), "Numero")
             Ultimo = VAL(LEFT$(a$, INSTR(a$, "/") - 1))
             Caption(UltimoOficioLB) = a$
             Proximo = Ultimo + 1
@@ -344,7 +343,7 @@ SUB __UI_Click (id AS LONG)
         CASE MenuItem1
             __UI_BeforeUnload
         CASE MenuItem2
-            Answer = MessageBox("Controle de Ofícios - TJMG\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018-2020", "", MsgBox_OkOnly + MsgBox_Information)
+            Answer = MessageBox("Controle de Ofícios - TJMG, v" + Versao + "\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018-2020", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             _DELAY .1: _KEYCLEAR
@@ -356,8 +355,8 @@ SUB __UI_Click (id AS LONG)
                 WriteSetting file$, nextRecord$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
                 WriteSetting file$, nextRecord$, "Usuario", Usuario
                 IF LEN(Text(DescricaoTB)) THEN WriteSetting file$, nextRecord$, "Descricao", Text(DescricaoTB)
-                WriteSetting file$, "controle", "UltimoNumero", a$
                 WriteSetting file$, "controle", "registros", nextRecord$
+                WriteSetting file$, "controle", "versao", Versao
 
                 CurrentRecord = TotalRecords + 1
                 inSearch = False
