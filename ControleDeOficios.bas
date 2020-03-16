@@ -82,7 +82,7 @@ FOR i = 1 TO _COMMANDCOUNT
             file$ = "oficios-civel.ini"
             backupFile$ = ENVIRON$("USERPROFILE") + "\oficios-civel-backup.ini"
             Usuario = COMMAND$(1)
-            GenericUser = "Secretaria CÌvel"
+            GenericUser = "Secretaria C√≠vel"
             EXIT FOR
         CASE "-arquivo"
             file$ = COMMAND$(i + 1)
@@ -96,9 +96,9 @@ FOR i = 1 TO _COMMANDCOUNT
 NEXT
 
 ': External modules: ---------------------------------------------------------------
-'$INCLUDE:'..\InForm\InForm\InForm.ui'
-'$INCLUDE:'..\InForm\InForm\xp.uitheme'
-'$INCLUDE:'..\INI-Manager\ini.bm'
+'$INCLUDE:'..\InForm\InForm.ui'
+'$INCLUDE:'..\InForm\xp.uitheme'
+'$INCLUDE:'..\ini.bm'
 '$INCLUDE:'ControleDeOficios.frm'
 
 ': Event procedures: ---------------------------------------------------------------
@@ -136,7 +136,7 @@ SUB __UI_OnLoad
         Proximo = 1
     END IF
 
-    Caption(ControleDeOficios) = "Controle de OfÌcios - " + GenericUser
+    Caption(ControleDeOficios) = "Controle de Of√≠cios - " + GenericUser
     Caption(BT) = LTRIM$(STR$(Proximo))
     Caption(Label10) = GenericUser
     Caption(UsuarioAtualLB) = Usuario
@@ -343,7 +343,7 @@ SUB __UI_Click (id AS LONG)
         CASE MenuItem1
             __UI_BeforeUnload
         CASE MenuItem2
-            Answer = MessageBox("Controle de OfÌcios - TJMG, v" + Versao + "\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018-2020", "", MsgBox_OkOnly + MsgBox_Information)
+            Answer = MessageBox("Controle de Of√≠cios - TJMG, v" + Versao + "\nComarca de Espera Feliz\n(c) Fellippe Heitor, 2018-2020", "", MsgBox_OkOnly + MsgBox_Information)
         CASE BT
             Answer = MessageBox("Confirma?", "", MsgBox_YesNo + MsgBox_Question)
             _DELAY .1: _KEYCLEAR
@@ -351,12 +351,15 @@ SUB __UI_Click (id AS LONG)
                 a$ = LTRIM$(STR$(Proximo)) + "/" + LTRIM$(STR$(EsteAno))
                 _CLIPBOARD$ = a$
                 nextRecord$ = LTRIM$(STR$(TotalRecords + 1))
+                DO UNTIL VAL(ReadSetting(file$, "controle", "locked")) = 0: _LIMIT 30: LOOP
+                WriteSetting file$, "controle", "locked", "1"
                 WriteSetting file$, nextRecord$, "Numero", a$
                 WriteSetting file$, nextRecord$, "Data", MID$(DATE$, 4, 2) + "/" + LEFT$(DATE$, 2) + "/" + RIGHT$(DATE$, 4)
                 WriteSetting file$, nextRecord$, "Usuario", Usuario
                 IF LEN(Text(DescricaoTB)) THEN WriteSetting file$, nextRecord$, "Descricao", Text(DescricaoTB)
                 WriteSetting file$, "controle", "registros", nextRecord$
                 WriteSetting file$, "controle", "versao", Versao
+                WriteSetting file$, "controle", "locked", "0"
 
                 CurrentRecord = TotalRecords + 1
                 inSearch = False
@@ -428,7 +431,7 @@ SUB __UI_MouseEnter (id AS LONG)
             a$ = ReadSetting(file$, STR$(CurrentRecord), "Descricao")
 
             IF LEN(a$) THEN
-                ToolTip(UltimaDescricaoLB) = "Bot·o direito para copiar"
+                ToolTip(UltimaDescricaoLB) = "Bot√°o direito para copiar"
             ELSE
                 ToolTip(UltimaDescricaoLB) = ""
             END IF
