@@ -1,8 +1,8 @@
-file$ = "oficios-civel.ini"
-backupFile$ = "novo_oficios-civel.ini"
+file$ = "oficios.ini"
+backupFile$ = "novo_oficios.ini"
 
 record = 0
-FOR backupIndex = 97 TO 1384
+FOR backupIndex = 1 TO 8
     a$ = ReadSetting(file$, STR$(backupIndex), "Descricao")
     b$ = ReadSetting(file$, STR$(backupIndex), "Data")
     c$ = ReadSetting(file$, STR$(backupIndex), "Usuario")
